@@ -84,7 +84,7 @@ def can_command(executable, root_fdno):
 
     canning_argv = [os.path.join(root_fd_path, linker.lstrip('/')),
                     '--library-path', ld_lib_path, fd_path]
-    return canning_argv, fd
+    return canning_argv, fobj
 
 
 @contextlib.contextmanager

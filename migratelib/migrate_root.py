@@ -19,6 +19,7 @@
 '''Migrate process in a chroot in a namespace to a new root'''
 
 
+from .genmounts import generate_mount_commands
 from .mount_tree import mount_tree
 from .mount_commands import mount_cmd, umount_cmd, findmnt_cmd
 
@@ -33,7 +34,9 @@ def migrate_root(root, pids, mount_list, replacements, mount_cmd=mount_cmd,
 
     '''
     with mount_tree(findmnt_cmd=findmnt_cmd, umount_cmd=umount_cmd) as new_tree:
-        new_tree.mount(generate_mount_commands(mount_list, replacements))
+        new_tree.mount(generate_mount_commands(mount_list=mount_list,
+                                               replace=replacements,
+                                               new_root=new_tree.root))
 
         for pid in pids:
             migrate_process(pid=pid, new_root=new_tree.root)

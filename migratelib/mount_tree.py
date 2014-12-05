@@ -84,7 +84,8 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
     
     '''
     tree_dir = tempfile.mkdtemp(dir=tempdir)
-    new_tree = MountTree(root=tree_dir)
+    new_tree = MountTree(root=tree_dir, mount_cmd=mount_cmd,
+                         umount_cmd=umount_cmd, findmnt_cmd=findmnt_cmd)
     try:
         yield new_tree
     except BaseException as e:

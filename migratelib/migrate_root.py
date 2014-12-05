@@ -20,8 +20,9 @@
 
 
 from .genmounts import generate_mount_commands
-from .mount_tree import mount_tree
+from .migrate_process import migrate_process
 from .mount_commands import mount_cmd, umount_cmd, findmnt_cmd
+from .mount_tree import mount_tree
 
 
 def migrate_root(root, pids, mount_list, replacements, mount_cmd=mount_cmd,

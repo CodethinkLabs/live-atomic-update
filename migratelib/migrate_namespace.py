@@ -19,6 +19,9 @@
 '''Migrate process in a namespace to a new root'''
 
 
+import logging
+import os
+
 from .findmnt import find_mounts, search_fields
 from .migrate_root import migrate_root
 from .mount_commands import mount_cmd, umount_cmd, findmnt_cmd
@@ -31,6 +34,8 @@ def migrate_namespace(namespace, pids_in_root, replacements,
                       mount_cmd=mount_cmd, umount_cmd=umount_cmd,
                       findmnt_cmd=findmnt_cmd):
     with namespace.entered():
+        if not os.path.isdir('/proc'):
+            logging.info('Skipping %s' % namespace)
         for root, pids in pids_in_root.iteritems():
             mount_list = find_mounts(root=root,
                                      tab_file='/proc/self/fd/%d'
@@ -44,13 +49,16 @@ def migrate_namespace(namespace, pids_in_root, replacements,
 
 def run():
     import argparse
+    import logging
     import os
+    import sys
     from .namespace import MountNamespace
     from . import replaceparser
     from .list_processes import collect_process_info
     from .canned_command_runner import (root_fd, canned_mount_cmd,
                                         canned_umount_cmd, canned_findmnt_cmd)
 
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--namespace', default='/proc/self/ns/mnt')
     replaceparser.extend_arg_parser(ap)

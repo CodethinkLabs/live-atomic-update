@@ -30,7 +30,7 @@ __all__ = ('migrate_namespace',)
 def migrate_namespace(namespace, pids_in_root, replacements,
                       mount_cmd=mount_cmd, umount_cmd=umount_cmd,
                       findmnt_cmd=findmnt_cmd):
-    with namespace.enter():
+    with namespace.entered():
         for root, pids in pids_in_root.iteritems():
             mount_list = find_mounts(root=root,
                                      tab_file='/proc/self/fd/%d'

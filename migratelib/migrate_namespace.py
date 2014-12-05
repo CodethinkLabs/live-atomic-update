@@ -48,6 +48,8 @@ def run():
     from .namespace import MountNamespace
     from . import replaceparser
     from .list_processes import collect_process_info
+    from .canned_command_runner import (root_fd, canned_mount_cmd,
+                                        canned_umount_cmd, canned_findmnt_cmd)
 
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--namespace', default='/proc/self/ns/mnt')
@@ -56,15 +58,15 @@ def run():
     print opts
 
     with open(opts.namespace) as mount_ns_fobj, \
-         open(os.path.join(opts.namespace, '../../mountinfo')) \
+         open(os.path.normpath(os.path.join(opts.namespace, '../../mountinfo'))) \
              as mountinfo_fobj:
         ns = MountNamespace(mount_ns_fobj, mountinfo_fobj)
         procinfo = collect_process_info()
 
         with root_fd() as root_fdno, \
-             canned_mount_cmd() as mount_cmd, \
-             canned_umount_cmd() as umount_cmd, \
-             canned_findmnt_cmd() as findmnt_cmd:
+             canned_mount_cmd(root_fdno) as mount_cmd, \
+             canned_umount_cmd(root_fdno) as umount_cmd, \
+             canned_findmnt_cmd(root_fdno) as findmnt_cmd:
             migrate_namespace(namespace=ns, pids_in_root=procinfo[ns],
                               replacements=opts.replace, mount_cmd=mount_cmd,
                               umount_cmd=umount_cmd, findmnt_cmd=findmnt_cmd)

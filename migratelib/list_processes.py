@@ -55,7 +55,7 @@ def run():
     opts = ap.parse_args()
 
     procinfo = collect_process_info()
-    pprint.pprint(procinfo)
+    pprint.pprint(dict(procinfo))
 
 
 if __name__ == '__main__':

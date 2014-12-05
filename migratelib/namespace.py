@@ -45,7 +45,7 @@ class MountNamespace(object):
         # here anyway, since we're likely to get better diagnostics
         mountinfo_path = os.path.join(proc_path, 'mountinfo')
         mountinfo_fobj = open(mountinfo_path)
-        cls(mount_ns_fobj=mount_ns_fobj, mountinfo_fobj=mouninfo_fobj)
+        return cls(mount_ns_fobj=mount_ns_fobj, mountinfo_fobj=mountinfo_fobj)
 
     def __hash__(self):
         return hash(self.inode)

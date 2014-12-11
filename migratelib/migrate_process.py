@@ -18,6 +18,7 @@
 '''Migrate process to new root'''
 
 import argparse
+import errno
 import json
 import logging
 import os
@@ -106,17 +107,17 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
         newpath = os.path.join(new_root, path.lstrip('/'))
         # translate new path to inside chroot
         relpath = os.path.join('/', newpath[len(old_root):])
-        newfd, errno = run_gdb_cmd_in_pid('open(%s, %#o)' %
+        newfd, cmderrno = run_gdb_cmd_in_pid('open(%s, %#o)' %
                                           (cescape(relpath), O_DIRECTORY),
                                           pid, runcmd=gdbcmd)
         if newfd < 0:
             raise Exception('Opening new dir fd failed: %s' %
-                            os.strerror(errno))
+                            os.strerror(cmderrno))
         dupres = run_gdb_cmd_in_pid('dup2(%d, %d)' % (newfd, fileno),
                                     pid, runcmd=gdbcmd)
         if dupres < 0:
             raise Exception('Replacing dir fd failed: %s' %
-                            os.strerror(errno))
+                            os.strerror(cmderrno))
         closeres = run_gdb_cmd_in_pid('close(%d)' % newfd, pid,
                                       runcmd=gdbcmd)
         if closeres < 0:
@@ -126,14 +127,17 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
     #chroot
     if old_root != new_root:
         relative_root = os.path.join('/', os.path.relpath(new_root, old_root))
-        res, errno = run_gdb_cmd_in_pid('chroot(%s)' %
+        res, cmderrno = run_gdb_cmd_in_pid('chroot(%s)' %
                                         cescape(relative_root), pid)
         if res != 0:
-            raise Exception('chroot failed')
+            if cmderrno == errno.EPERM:
+                warnings.warn('Process %d has insufficient privileges to chroot' % pid)
+            else:
+                raise Exception('chroot failed unexpectedly')
 
     #chdir
     relative_cwd = os.path.join('/', os.path.relpath(old_cwd, old_root))
-    res, errno = run_gdb_cmd_in_pid('chdir(%s)' %
+    res, cmderrno = run_gdb_cmd_in_pid('chdir(%s)' %
                                     cescape(relative_cwd), pid)
 
 

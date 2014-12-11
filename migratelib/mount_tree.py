@@ -93,7 +93,7 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
         try:
             for mount in reversed(find_mounts(root=new_tree.root,
                                               runcmd=findmnt_cmd)):
-                umount_cmd(mount['TARGET'])
+                umount_cmd(mount['TARGET'], detach=True)
         except subprocess.CalledProcessError as e:
             pass
         else:

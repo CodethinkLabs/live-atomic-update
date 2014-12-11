@@ -56,7 +56,7 @@ def find_mounts(root=None, tab_file=None, task=None, fields=None,
     if fields is not None:
         argv.extend(('--output', ','.join(fields)))
     if recurse:
-        if root is not None:
+        if root is None:
             raise ValueError('recurse passed without root')
         argv.append('--submounts')
     if root is not None:

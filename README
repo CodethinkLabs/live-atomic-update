@@ -1,2 +1,13 @@
-Recursive unmount
+Process migration
 =================
+
+Limitations
+-----------
+
+1.  Can't migrate un-ptraceable processes.
+
+    This includes anything currently being ptraced, anything that blocks
+    ptracing and anything that is not ptraceable (such as kdevtmpfsd or
+    other kworker processes).
+
+2.  Can't migrate processes that have dropped the capability to chroot.

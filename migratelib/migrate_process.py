@@ -22,6 +22,7 @@ import json
 import logging
 import os
 from pipes import quote as shellescape
+import re
 import subprocess
 import sys
 import warnings
@@ -67,13 +68,18 @@ def _gdb_runner(args, **kwargs):
 
 def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
     argv = ['--quiet', '--pid', str(pid), '--batch',
-            '--eval-command', 'output %s' % command]
+            '--eval-command', 'output (int[2]){%s, errno}' % command]
+    cmd_as_str = ' '.join(map(shellescape, argv))
     with open(os.devnull) as devnull:
         out = runcmd(argv, stderr=devnull)
-        ecode = int(out.splitlines()[-1].strip())
-    logging.debug('Running %s returned %d' %
-                  (' '.join(map(shellescape, argv)), ecode))
-    return ecode
+    logging.debug('Running %s output %s' % (cmd_as_str, out))
+    cmd_ret_out = out.splitlines()[-1].strip()
+    outstrs = re.match(r'{(\d+), (\d+)}', cmd_ret_out)
+    ecode = int(outstrs.group(1))
+    errno = int(outstrs.group(2))
+    logging.debug('Running %s returned %d with errno %d' %
+                  (cmd_as_str, ecode, errno))
+    return ecode, errno
 
 
 def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
@@ -92,19 +98,22 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
         newpath = os.path.join(new_root, path.lstrip('/'))
         # translate new path to inside chroot
         relpath = os.path.join('/', newpath[len(old_root):])
-        newfd = run_gdb_cmd_in_pid('open(%s, %#o)' %
-                                   (cescape(relpath), O_DIRECTORY),
-                                   pid, runcmd=gdbcmd)
+        newfd, errno = run_gdb_cmd_in_pid('open(%s, %#o)' %
+                                          (cescape(relpath), O_DIRECTORY),
+                                          pid, runcmd=gdbcmd)
         if newfd < 0:
-            raise Exception('Opening new dir fd failed')
+            raise Exception('Opening new dir fd failed: %s' %
+                            os.strerror(errno))
         dupres = run_gdb_cmd_in_pid('dup2(%d, %d)' % (newfd, fileno),
                                     pid, runcmd=gdbcmd)
         if dupres < 0:
-            raise Exception('Replacing dir fd failed')
+            raise Exception('Replacing dir fd failed: %s' %
+                            os.strerror(errno))
         closeres = run_gdb_cmd_in_pid('close(%d)' % newfd, pid,
                                       runcmd=gdbcmd)
         if closeres < 0:
-            warnings.warn('Failed to close new dir fd %s' % newfd)
+            warnings.warn('Failed to close new dir fd %s: %s' %
+                          (newfd))
 
     #chroot
     if old_root != new_root:

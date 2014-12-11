@@ -20,6 +20,7 @@
 
 
 import contextlib
+import logging
 import os
 import subprocess
 import sys
@@ -95,9 +96,15 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
                                               runcmd=findmnt_cmd)):
                 umount_cmd(mount['TARGET'], detach=True)
         except subprocess.CalledProcessError as e:
-            pass
+            logging.error('Failed to umount %s while cleaning up mount tree'
+                          % mount['TARGET'])
         else:
-            os.rmdir(new_tree.root)
+            try:
+                os.rmdir(new_tree.root)
+            except OSError as e:
+                logging.error('Failed to rmdir %s while '
+                              'cleaning up mount tree: %s'
+			      % (new_tree.root, e.strerror))
         raise etype, evalue, etrace
 
 

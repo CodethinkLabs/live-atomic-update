@@ -118,15 +118,15 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
     #chroot
     if old_root != new_root:
         relative_root = os.path.join('/', os.path.relpath(new_root, old_root))
-        res = run_gdb_cmd_in_pid('chroot(%s)' %
-                                 cescape(relative_root), pid)
+        res, errno = run_gdb_cmd_in_pid('chroot(%s)' %
+                                        cescape(relative_root), pid)
         if res != 0:
             raise Exception('chroot failed')
 
     #chdir
     relative_cwd = os.path.join('/', os.path.relpath(old_cwd, old_root))
-    res = run_gdb_cmd_in_pid('chdir(%s)' %
-                             cescape(relative_cwd), pid)
+    res, errno = run_gdb_cmd_in_pid('chdir(%s)' %
+                                    cescape(relative_cwd), pid)
 
 
 def run():

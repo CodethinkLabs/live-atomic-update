@@ -40,7 +40,7 @@ def migrate_namespace(namespace, pids_in_root, replacements,
             mount_list = find_mounts(root=root,
                                      tab_file='/proc/self/fd/%d'
                                          % namespace.mountinfo_fobj.fileno(),
-                                     fields=search_fields,
+                                     fields=search_fields, recurse=True,
                                      runcmd=findmnt_cmd)
             migrate_root(root, pids, mount_list, replacements,
                          mount_cmd=mount_cmd, umount_cmd=umount_cmd,

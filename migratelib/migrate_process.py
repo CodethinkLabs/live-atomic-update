@@ -66,6 +66,11 @@ def _gdb_runner(args, **kwargs):
     return subprocess.check_output(['gdb'] + args, **kwargs)
 
 
+def is_ptraceable(pid, runcmd=_gdb_runner):
+    out = runcmd(['--pid', str(pid), '--batch'], stderr=subprocess.STDOUT)
+    return 'ptrace: Operation not permitted.' not in out
+
+
 def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
     argv = ['--quiet', '--pid', str(pid), '--batch',
             '--eval-command', 'output (int[2]){%s, errno}' % command]
@@ -83,6 +88,9 @@ def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
 
 
 def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
+    if not is_ptraceable(pid=pid, runcmd=gdbcmd):
+	warnings.warn('Pid %d is not ptraceable' % pid)
+	return
     old_root = get_pid_root(pid)
     if not new_root.startswith(old_root):
         raise Exception('New root not reachable from old root')

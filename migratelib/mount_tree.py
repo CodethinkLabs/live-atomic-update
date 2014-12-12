@@ -60,14 +60,28 @@ class MountTree(object):
         
         '''
         tempdir = os.path.join(self.root, tempdir.lstrip('/'))
+        logging.debug('Pivoting into %s' % tempdir)
         with mount_tree(tempdir=tempdir, mount_cmd=self.mount_cmd,
                         umount_cmd=self.umount_cmd,
                         findmnt_cmd=self.findmnt_cmd) as old_tree:
             try:
+                self.root, old_tree.root = pivot_root(new_root=self.root,
+                                                      put_old=old_tree.root)
                 yield old_tree
             except BaseException as e:
                 self.root, old_tree.root = pivot_root(new_root=self.root,
                                                       put_old=old_tree.root)
+
+    def umount(self, detach=False):
+        mount = None
+        try:
+            for mount in reversed(find_mounts(root=self.root,
+                                              runcmd=self.findmnt_cmd)):
+                self.umount_cmd(mount['TARGET'], detach=True)
+        except subprocess.CalledProcessError as e:
+            if mount is not None:
+                logging.error('Failed to umount %s while cleaning up mount tree'
+                              % mount['TARGET'])
 
 
 @contextlib.contextmanager
@@ -91,20 +105,13 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
         yield new_tree
     except BaseException as e:
         (etype, evalue, etrace) = sys.exc_info()
+        new_tree.umount(detach=True)
         try:
-            for mount in reversed(find_mounts(root=new_tree.root,
-                                              runcmd=findmnt_cmd)):
-                umount_cmd(mount['TARGET'], detach=True)
-        except subprocess.CalledProcessError as e:
-            logging.error('Failed to umount %s while cleaning up mount tree'
-                          % mount['TARGET'])
-        else:
-            try:
-                os.rmdir(new_tree.root)
-            except OSError as e:
-                logging.error('Failed to rmdir %s while '
-                              'cleaning up mount tree: %s'
-			      % (new_tree.root, e.strerror))
+            os.rmdir(new_tree.root)
+        except OSError as e:
+            logging.error('Failed to rmdir %s while '
+                          'cleaning up mount tree: %s'
+                          % (new_tree.root, e.strerror))
         raise etype, evalue, etrace
 
 
@@ -129,7 +136,7 @@ def run():
             ])
     mount_list = find_mounts(task=opts.pid, fields=search_fields)
 
-    with new_mount_tree() as new_tree:
+    with mount_tree() as new_tree:
         new_tree.mount(generate_mount_commands(mount_list, opts.replace))
         print new_tree.root
 

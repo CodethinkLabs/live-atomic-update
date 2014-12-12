@@ -1,5 +1,71 @@
-Process migration
-=================
+Online atomic updates
+=====================
+
+The problem
+-----------
+
+We don't do packages in Baserock. We produce system images.
+
+One consequence of this is that updates need to be atomic i.e. we go
+from the old state to the new state with no transition states in-between.
+
+Atomicity is good, as it allows you to make guarantees about what's
+contained in the filesystem at any given time.
+
+We're not alone in doing image-based systems, see ostree and project
+atomic.
+
+However, Linux currently lacks mechanisms for doing this swap without
+service interruption. Everyone does a reboot.
+
+This is unfortunate, since it means your service is down, and you need
+a full reboot cycle for the update to be applied.
+
+This is a problem if you want to build high-availability systems, apply
+updates quickly to your cluster and you have high performance hardware
+that takes tens of minutes to boot.
+
+Package based systems can handle this because packages can be uninstalled
+and leave the filesystem in a safe state. This is managed by uninstalling
+packages in a safe lump, and you can even run scripts to make this safe
+if the default behaviour isn't.
+
+How it works
+------------
+
+ptrace is a system call used for debugging. One of its features is that
+you can use it to inject code, which is traditionally used to inject
+breakpoints and print or modify state.
+
+We can switch to a new version of the system by mounting the new tree and
+pivoting into it, but existing processes will continue to use the original
+version until they are migrated.
+
+To migrate processes into the new version of the mount tree, we will:
+
+1.  Create a prallel mount tree with the system image's mount replaced
+    with the new version.
+
+2.  Use ptrace to enter the process and have them chroot, chdir and re-open any
+    directory file descriptors.
+
+3.  Use pivot_root to swap the mount trees around
+
+4.  Lazily unmount (umount2(path, MNT_DETACH)) the mount points, so when
+    processes close all files opened on the old mount tree, it is unmounted.
+
+5.  Instruct services to gracefully re-exec as necessary
+
+
+Services need to re-exec to stop using files from the old mount tree. This is
+not unusual though, as package-based online updates also leave processes with
+open files that are no longer reachable.
+
+It would be possible to re-exec all services instead of attempting to migrate
+them, but that would require patching the entire userland to be able to
+gracefully re-exec.
+
+
 
 Limitations
 -----------
@@ -11,3 +77,99 @@ Limitations
     other kworker processes).
 
 2.  Can't migrate processes that have dropped the capability to chroot.
+
+3.  Can't migrate processes that don't have the open, dup2, close, chroot or
+    chdir syscall wrapper functions.
+
+4.  Can't migrate processes that don't link against pthread.
+
+    I fetch errno out so I can know why a command failed, gdb can't fetch it
+    unless the program is linked against pthread.
+
+5.  Process migration is racy
+
+    Processes may appear or disappear between scanning and migration.
+
+    The directory file descriptors they have open may change between scanning
+    and reopening.
+
+6.  You can crash processes if you migrate between a syscall being called and
+    errno being checked, since syscalls will change errno.
+
+Future work to make this more reliable
+--------------------------------------
+
+1.  Stop using GDB
+
+    gdb is not meant to be abused this way. The whole of the process migration
+    code should be injected into the process to avoid races between directory fd
+    scanning and migration.
+
+    The interface is not at all easy to work with for programmatically mutating
+    process state and reading results out.
+
+    There may be a better interface to gdb for this, but given the ptrace
+    limitations, there may not be a future for it.
+
+2.  Freeze all processes before migrating
+
+    Barring an atomic operation to migrate every process, every process needs
+    to be frozen. This can be done with cgroups, but effectively requires that
+    the process to drive migration is systemd, since you can't freeze the root
+    cgroup.
+
+3.  Add kernel support for this instead of using ptrace
+
+    An enhanced pivot_root syscall that moves all processes in a namespace by
+    changing their root, cwd and open directory fds would be ideal.
+
+    ptrace is fundamentally unsuitable for this because syscalls are run with
+    the target process' permissions, rather than the driver process, and not all
+    processes can be ptraced.
+
+    We can get away with syscalls for migrating another process' root, cwd and
+    directory fds individually (such as making the entries in /proc modifiable
+    with linkat) if we freeze all processes before migration.
+
+
+Alternative approaches
+----------------------
+
+The above may all be far too much work for online atomic updates to be a
+reality, so some of the alternatives below may be preferable.
+
+0.  Abandon atomic updates and have package updates.
+
+    This means you can be in an inconsistent state if something goes wrong
+    during a package update, and there's extra effort per-package to define safe
+    ways of installing the new files while leaving the fs in a consistent state.
+
+    This makes the amount of work required to maintain a distribution increase
+    with the number of packages, so we want to avoid that for Baserock.
+
+1.  Package applications as containers and update the whole container at once.
+
+    This requires down-time per application, and it doesn't solve the problem
+    with updating the base system if there's security problems in the container
+    software.
+
+2.  Kexec into the new system rather than a full reboot
+
+    This reduces the down-time if hardware takes a long time to reboot, but it
+    still has a service interruption.
+
+    Not all hardware is kexec safe.
+
+3.  Snapshot and restore processes with CRIU.
+
+    This doesn't have a service interruption, but migrating processes with
+    snapshot + restore is slow, and not all processes are snapshottable.
+
+    It also may not be safe to restore in a different mount tree to that which
+    it left.
+
+4.  Have systemd pivot and re-exec all services
+
+    This would either need to tear down and restart all services, causing a
+    service interruption, or ask all services to gracefully re-exec, which
+    requires patching the whole of the userland.

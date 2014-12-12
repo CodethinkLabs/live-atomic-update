@@ -82,16 +82,19 @@ def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
     argv = ['--quiet', '--pid', str(pid), '--batch',
             '--eval-command', 'output (int[2]){%s, errno}' % command]
     cmd_as_str = ' '.join(map(shellescape, argv))
-    with open(os.devnull) as devnull:
-        out = runcmd(argv, stderr=devnull)
+    out = runcmd(argv, stderr=subprocess.STDOUT)
     logging.debug('Running %s output %s' % (cmd_as_str, out))
     cmd_ret_out = out.splitlines()[-1].strip()
     outstrs = re.match(r'{([-\d]+), (\d+)}', cmd_ret_out)
+    if not outstrs:
+        logging.error('Running %s in pid %d failed: %s'
+                      % (command, pid, cmd_ret_out))
+        return -1, errno.EINVAL
     ecode = int(outstrs.group(1))
-    errno = int(outstrs.group(2))
+    cmderrno = int(outstrs.group(2))
     logging.debug('Running %s returned %d with errno %d' %
-                  (cmd_as_str, ecode, errno))
-    return ecode, errno
+                  (cmd_as_str, ecode, cmderrno))
+    return ecode, cmderrno
 
 
 def migrate_process(pid, new_root, gdbcmd=_gdb_runner):

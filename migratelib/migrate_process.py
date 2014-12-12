@@ -72,6 +72,12 @@ def is_ptraceable(pid, runcmd=_gdb_runner):
     return 'ptrace: Operation not permitted.' not in out
 
 
+def errno_is_readable(pid, runcmd=_gdb_runner):
+    out = runcmd(['--pid', str(pid), '--batch',
+                  '--eval-command', 'output errno'], stderr=subprocess.STDOUT)
+    return 'Cannot find thread-local variables on this target' not in out
+
+
 def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
     argv = ['--quiet', '--pid', str(pid), '--batch',
             '--eval-command', 'output (int[2]){%s, errno}' % command]
@@ -90,8 +96,11 @@ def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
 
 def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
     if not is_ptraceable(pid=pid, runcmd=gdbcmd):
-	warnings.warn('Pid %d is not ptraceable' % pid)
-	return
+        warnings.warn('Pid %d is not ptraceable' % pid)
+        return
+    if not errno_is_readable(pid=pid, runcmd=gdbcmd):
+        warnings.warn('Cannot read errno from pid %d' % pid)
+        return
     old_root = get_pid_root(pid)
     if not new_root.startswith(old_root):
         raise Exception('New root not reachable from old root')

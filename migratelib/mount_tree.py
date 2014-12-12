@@ -29,6 +29,7 @@ import tempfile
 from .findmnt import find_mounts, search_fields
 from .genmounts import generate_mount_commands
 from .mount_commands import mount_cmd, umount_cmd, findmnt_cmd
+from .ll.pivot_root import pivot_root
 #import .replaceparser as replaceparser
 from . import replaceparser
 

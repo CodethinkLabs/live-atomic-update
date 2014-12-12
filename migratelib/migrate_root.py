@@ -19,6 +19,8 @@
 '''Migrate process in a chroot in a namespace to a new root'''
 
 
+import os
+
 from .genmounts import generate_mount_commands
 from .migrate_process import migrate_process
 from .mount_commands import mount_cmd, umount_cmd, findmnt_cmd

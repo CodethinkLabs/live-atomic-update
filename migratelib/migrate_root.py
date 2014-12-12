@@ -40,6 +40,8 @@ def migrate_root(root, pids, mount_list, replacements, mount_cmd=mount_cmd,
                                                new_root=new_tree.root))
 
         for pid in pids:
+            if pid == os.getpid():
+                continue
             migrate_process(pid=pid, new_root=new_tree.root)
 
         with new_tree.pivot() as put_old:

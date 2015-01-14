@@ -19,6 +19,7 @@
 
 import argparse
 import errno
+from functools import partial
 import json
 import logging
 import os
@@ -78,7 +79,7 @@ def errno_is_readable(pid, runcmd=_gdb_runner):
     return 'Cannot find thread-local variables on this target' not in out
 
 
-def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
+def run_gdb_cmd_in_pid_with_errno(command, pid, runcmd=_gdb_runner):
     argv = ['--quiet', '--pid', str(pid), '--batch',
             '--eval-command', 'output (int[2]){%s, errno}' % command]
     cmd_as_str = ' '.join(map(shellescape, argv))
@@ -97,13 +98,33 @@ def run_gdb_cmd_in_pid(command, pid, runcmd=_gdb_runner):
     return ecode, cmderrno
 
 
+def run_gdb_cmd_in_pid_without_errno(command, pid, runcmd=_gdb_runner):
+    argv = ['--quiet', '--pid', str(pid), '--batch',
+            '--eval-command', 'output %s' % command]
+    cmd_as_str = ' '.join(map(shellescape, argv))
+    out = runcmd(argv, stderr=subprocess.STDOUT)
+    logging.debug('Running %s output %s' % (cmd_as_str, out))
+    cmd_ret_out = out.splitlines()[-1].strip()
+    outstrs = re.match(r'([-\d]+)', cmd_ret_out)
+    if not outstrs:
+        logging.error('Running %s in pid %d failed: %s'
+                      % (command, pid, cmd_ret_out))
+        return -1, errno.EINVAL
+    ecode = int(outstrs.group(1))
+    logging.debug('Running %s returned %d' %
+                  (cmd_as_str, ecode))
+    return ecode, None
+
+
 def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
     if not is_ptraceable(pid=pid, runcmd=gdbcmd):
         warnings.warn('Pid %d is not ptraceable' % pid)
         return
+    run_gdb = partial(run_gdb_cmd_in_pid_with_errno, pid=pid, runcmd=gdbcmd)
     if not errno_is_readable(pid=pid, runcmd=gdbcmd):
         warnings.warn('Cannot read errno from pid %d' % pid)
-        return
+        run_gdb = partial(run_gdb_cmd_in_pid_without_errno, pid=pid,
+                          runcmd=gdbcmd)
     old_root = get_pid_root(pid)
     if not new_root.startswith(old_root):
         raise Exception('New root not reachable from old root')
@@ -119,28 +140,24 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
         newpath = os.path.join(new_root, path.lstrip('/'))
         # translate new path to inside chroot
         relpath = os.path.join('/', newpath[len(old_root):])
-        newfd, cmderrno = run_gdb_cmd_in_pid('open(%s, %#o)' %
-                                          (cescape(relpath), O_DIRECTORY),
-                                          pid, runcmd=gdbcmd)
+        newfd, cmderrno = run_gdb('open(%s, %#o)' %
+                                  (cescape(relpath), O_DIRECTORY))
         if newfd < 0:
             raise Exception('Opening new dir fd failed: %s' %
                             os.strerror(cmderrno))
-        dupres = run_gdb_cmd_in_pid('dup2(%d, %d)' % (newfd, fileno),
-                                    pid, runcmd=gdbcmd)
-        if dupres < 0:
+        res, cmderrno = run_gdb('dup2(%d, %d)' % (newfd, fileno))
+        if res < 0:
             raise Exception('Replacing dir fd failed: %s' %
                             os.strerror(cmderrno))
-        closeres = run_gdb_cmd_in_pid('close(%d)' % newfd, pid,
-                                      runcmd=gdbcmd)
-        if closeres < 0:
+        res, cmderrno = run_gdb('close(%d)' % newfd)
+        if res < 0:
             warnings.warn('Failed to close new dir fd %s: %s' %
                           (newfd))
 
     #chroot
     if old_root != new_root:
         relative_root = os.path.join('/', os.path.relpath(new_root, old_root))
-        res, cmderrno = run_gdb_cmd_in_pid('chroot(%s)' %
-                                        cescape(relative_root), pid)
+        res, cmderrno = run_gdb('chroot(%s)' % cescape(relative_root))
         if res != 0:
             if cmderrno == errno.EPERM:
                 warnings.warn('Process %d has insufficient privileges to chroot' % pid)
@@ -149,8 +166,7 @@ def migrate_process(pid, new_root, gdbcmd=_gdb_runner):
 
     #chdir
     relative_cwd = os.path.join('/', os.path.relpath(old_cwd, old_root))
-    res, cmderrno = run_gdb_cmd_in_pid('chdir(%s)' %
-                                    cescape(relative_cwd), pid)
+    res, cmderrno = run_gdb('chdir(%s)' % cescape(relative_cwd))
 
 
 def run():

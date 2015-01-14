@@ -62,18 +62,26 @@ class MountTree(object):
         '''
         tempdir = os.path.join(self.root, tempdir.lstrip('/'))
         logging.debug('Pivoting into %s' % tempdir)
+        if not os.path.lexists(tempdir):
+            logging.debug('%s does not exist!' % tempdir)
         with mount_tree(tempdir=tempdir, mount_cmd=self.mount_cmd,
                         umount_cmd=self.umount_cmd,
                         findmnt_cmd=self.findmnt_cmd) as old_tree:
             try:
                 self.root, old_tree.root = pivot_root(new_root=self.root,
                                                       put_old=old_tree.root)
+            except BaseException as e:
+                logging.error('Exception while pivoting: %s' % str(e))
+                raise
+            try:
                 yield old_tree
             except BaseException as e:
+                logging.error('Exception while pivoted: %s' % str(e))
+                logging.info('Pivoting back')
                 self.root, old_tree.root = pivot_root(new_root=self.root,
                                                       put_old=old_tree.root)
 
-    def umount(self, detach=False):
+    def unmount(self, detach=False):
         mount = None
         try:
             for mount in reversed(find_mounts(root=self.root,
@@ -106,7 +114,7 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
         yield new_tree
     except BaseException as e:
         (etype, evalue, etrace) = sys.exc_info()
-        new_tree.umount(detach=True)
+        new_tree.unmount(detach=True)
         try:
             os.rmdir(new_tree.root)
         except OSError as e:

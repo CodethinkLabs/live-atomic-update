@@ -17,6 +17,7 @@
 
 
 import ctypes
+import logging
 import os
 
 
@@ -34,6 +35,7 @@ def _pivot_root(new_root, put_old):
 
 
 def pivot_root(new_root, put_old):
+    logging.info('Pivoting into %s, putting old root into %s' % (new_root, put_old))
     _pivot_root(new_root, put_old)
     # Our paths for new_root and put_old are now wrong, so we need to strip
     # new_root from put_old and prepend new_root with put_old

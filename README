@@ -75,20 +75,19 @@ Limitations
 3.  Can't migrate processes that don't have the open, dup2, close, chroot or
     chdir syscall wrapper functions.
 
-4.  Can't migrate processes that don't link against pthread.
-
-    I fetch errno out so I can know why a command failed, gdb can't fetch it
-    unless the program is linked against pthread.
-
-5.  Process migration is racy
+4.  Process migration is racy
 
     Processes may appear or disappear between scanning and migration.
 
     The directory file descriptors they have open may change between scanning
     and reopening.
 
-6.  You can crash processes if you migrate between a syscall being called and
-    errno being checked, since syscalls will change errno.
+5.  Unless gdb threads have their own thread-local errno, you can confuse
+    processes if you migrate between a syscall being called and errno being
+    checked, since syscalls will change errno.
+
+6.  Any programs that rely on the output of stat on `/`, `.` or any opened
+    directory fds can get confused, since they may change at migration time.
 
 Future work to make this more reliable
 --------------------------------------

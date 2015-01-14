@@ -36,7 +36,14 @@ def migrate_namespace(namespace, pids_in_root, replacements,
     with namespace.entered():
         if not os.path.isdir('/proc'):
             logging.info('Skipping %s' % namespace)
+            return False
         for root, pids in pids_in_root.iteritems():
+            # Can't pivot if we have non-private mount propagation
+            root_mount, = find_mounts(root=root, fields=('PROPAGATION',))
+            if root_mount['PROPAGATION'] != 'private':
+                raise Exception("Cannot migrate namespace, %s mount "
+                                "propagation is not private, use "
+                                "`mount --make-rprivate /` to fix." % root)
             mount_list = find_mounts(root=root,
                                      tab_file='/proc/self/fd/%d'
                                          % namespace.mountinfo_fobj.fileno(),
@@ -45,6 +52,7 @@ def migrate_namespace(namespace, pids_in_root, replacements,
             migrate_root(root, pids, mount_list, replacements,
                          mount_cmd=mount_cmd, umount_cmd=umount_cmd,
                          findmnt_cmd=findmnt_cmd)
+        return True
 
 
 def run():

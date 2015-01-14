@@ -92,26 +92,14 @@ Limitations
 Future work to make this more reliable
 --------------------------------------
 
-1.  Stop using GDB
-
-    gdb is not meant to be abused this way. The whole of the process migration
-    code should be injected into the process to avoid races between directory fd
-    scanning and migration.
-
-    The interface is not at all easy to work with for programmatically mutating
-    process state and reading results out.
-
-    There may be a better interface to gdb for this, but given the ptrace
-    limitations, there may not be a future for it.
-
-2.  Freeze all processes before migrating
+1.  Freeze all processes before migrating
 
     Barring an atomic operation to migrate every process, every process needs
     to be frozen. This can be done with cgroups, but effectively requires that
     the process to drive migration is systemd, since you can't freeze the root
     cgroup.
 
-3.  Add kernel support for this instead of using ptrace
+2.  Add kernel support for this instead of using ptrace
 
     An enhanced pivot_root syscall that moves all processes in a namespace by
     changing their root, cwd and open directory fds would be ideal.
@@ -123,6 +111,28 @@ Future work to make this more reliable
     We can get away with syscalls for migrating another process' root, cwd and
     directory fds individually (such as making the entries in /proc modifiable
     with linkat) if we freeze all processes before migration.
+
+3.  OR instead of migrating processes to a new mount tree, alter the mounted
+    filesystem in a zero-copy manner.
+
+    This still requires freezing all of userland except systemd unless we get a
+    syscall to commit changes to a filesystem.
+
+    If we don't need to copy data this shouldn't be slow, but it's a rename for
+    each file in the intersection of both versions, a link for each file only
+    in the new version, and an unlink for files not in the new version.
+
+    A syscall for swapping the contents of a directory inode would make this
+    quicker and easier, as you could build a map of the files open by processes,
+    and swap entire subtrees when there's no open files in that subtree.
+
+    This doesn't need anything filesystem specific to work, but rollback either
+    requires it to either be a read-only hardlink tree (see ostree), or a CoW
+    snapshot.
+
+    This has the advantage of not needing to fiddle with a process' fds or
+    mucking about with mount namespaces, and it doesn't break anything that was
+    relying on the inode numbers to remain stable.
 
 
 Alternative approaches

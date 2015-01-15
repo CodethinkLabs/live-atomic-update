@@ -29,7 +29,7 @@ def extend_arg_parser(ap, argnames=('--replace',), dest='replace'):
     replaceparser = argparse.ArgumentParser()
     replaceparser.add_argument('--filter', nargs='*',
                                action='append', default=[])
-    replaceparser.add_argument('--mount-source')
+    replaceparser.add_argument('--mount-source', default='none')
     replaceparser.add_argument('--mount-type')
     replaceparser.add_argument('--mount-options', '-o', nargs='*', action='append',
                                default=[])

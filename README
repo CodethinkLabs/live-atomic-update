@@ -59,7 +59,50 @@ It would be possible to re-exec all services instead of attempting to migrate
 them, but that would require patching the entire userland to be able to
 gracefully re-exec.
 
+Usage
+-----
 
+This tool works by allowing you to replace a mounted filesystem, so if your
+root filesystem is versioned as each version has a different btrfs subvolume,
+then you can change software versions by mounting a different subvolume.
+
+In Baserock, this works by mounting the `/systems/$VERSION/run` subvolume as /.
+
+### The `--replace` option
+
+Each mount replacement is started with `--replace`, with the options for each
+replacement afterwards, until the next `--replace` option.
+
+### The `--filter` option
+
+`--filter MATCH... [--filter MATCH...]...` takes key-value pairs of options, as
+produced by the `findmnt --pairs` command. Multiple pairs can be given per
+`--filter` option, and multiple `--filter` options can be given.
+
+Typically the match `TARGET=$PATH` is sufficient, but if there are multiple
+overlaid mounts, then more specific filters are required, as if there's
+multiple matching mounts, then the first is chosen and a warning is emitted.
+
+### Replacement mount options
+
+The `--mount-source` option specifies a device when mounting a disk, a
+directory when bind-mounting, or is ignored for special types of filesystems.
+
+The `--mount-type` option specifies the type of fileysystem, this is optional,
+but faster, for disk mounts, ignored for bind mounts and required for special
+filesystem mounts.
+
+The `-o` or `--mount-options` option specifies mount options to pass to the
+mount command. Multiple options can be given to the same option as either
+separate arguments or comma separated values, and the option can be specified
+multiple times.
+
+So, for a Baserock system to change the version of its rootfs to `$VERSION`, we
+can run this command:
+
+    python -m migratelib.migrate_namespace -- \
+        --replace --filter TARGET=/ \
+                  --mount-source /dev/sda -o subvol=/systems/"$VERSION"/run
 
 Limitations
 -----------

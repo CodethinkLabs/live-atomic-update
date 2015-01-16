@@ -11,7 +11,7 @@ that takes tens of minutes to boot.
 The updates must be atomic because we want to go from the old state to the new
 state with no transition states in-between.
 
-We're not alone in doing image-based systems, see ostree and project atomic.
+We're not alone in doing image-based systems, see [ostree](https://wiki.gnome.org/action/show/Projects/OSTree?action=show&redirect=OSTree) and [project atomic](http://www.projectatomic.io).
 
 This is because package based systems can handle this by defining a safe order
 for replacement of individual files, which varies between versions, introduces

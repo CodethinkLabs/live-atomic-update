@@ -50,7 +50,6 @@ To migrate processes into the new version of the mount tree, we will:
 
 5.  Instruct services to gracefully re-exec as necessary
 
-
 Services need to re-exec to stop using files from the old mount tree. This is
 not unusual though, as package-based online updates also leave processes with
 open files that are no longer reachable.

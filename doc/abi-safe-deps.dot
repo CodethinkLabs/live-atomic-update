@@ -1,0 +1,4 @@
+digraph libc_deps {
+	librt -> libc [label="realloc@@GLIBC_2.2.5"]
+	libm -> libc [label="strtod@@GLIBC_2.2.5"]
+}

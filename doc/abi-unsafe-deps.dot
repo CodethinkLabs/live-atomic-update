@@ -1,0 +1,4 @@
+digraph libc_deps {
+	librt -> libc [label="errno@@GLIBC_PRIVATE"]
+	libm -> libc  [label="errno@@GLIBC_PRIVATE"]
+}

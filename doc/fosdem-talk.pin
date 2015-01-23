@@ -1,0 +1,82 @@
+#!/usr/bin/env pinpoint
+
+[duration=30]
+
+--
+Online Atomic updates
+# Welcome to my talk about Online, or Live Atomic Updates.  My goal is
+# to hopefully persuade some of you that it's something we should do,
+# and hopefully a bit of collaboration, since I don't have a solution
+# yet.
+
+--
+What do I mean by Online Atomic updates?
+# First, what am I talking about?
+
+--
+Online - Updating a running system
+# Online updates means Updating a running system, so there's no
+# service outage.  So if you have to reboot to apply updates you are
+# doing an offline update.
+
+--
+Atomic - All or nothing
+# This is a bit more involved. You go from one version to another in
+# one go.
+# Traditional embedded does this with A/B partitioning and a watchdog
+# for if the other partition doesn't boot.
+# OSTree/Project atomic does this by rebooting into a different
+# hardlink tree.
+# CoreOS also does some form of atomic update, I haven't looked into
+# it, but I think it still requires a reboot.
+# At my day-job I work on a project called Baserock, which has
+# different versions as btrfs subvolumes, and the bootloader picks
+# which to use via the kernel command-line.
+
+--
+Why do you want Atomic updates?
+
+•   System image based versioning
+
+# As a result, you can version your system more easily, so you put
+# together a set of known working combinations, and can easily
+# identify what it is.
+# Compared with package-based updates where you end up with a
+# combinatorial explosion of what people are running, which makes
+# debugging issues difficult.
+
+--
+Why do you want Atomic updates?
+•   Non-atomic updates can leave your system unusable if you are
+    interrupted mid-update.
+    Per-file atomic update is not sufficient.
+
+# Non-atomic package based updates aren't reliable, since if something
+# goes wrong mid-package update, you can end up in an inconsistent
+# state.
+# There's tricks for ensuring you atomically update a single file,
+# by writing it to disk, fsyncing and renaming it over the top of the
+# old file.
+
+-- [abi-safe-deps.png]
+
+# But if you have interdependent files you need to find a
+# safe order for replacing them.
+# e.g. updating libc.so before other libraries, and relying on it
+# providing a backwards-compatible ABI
+# This requires packagers to declare a safe order, adding a lot of
+# extra packaging work, and a slip-up in internal ABIs can leave you
+# with a broken system when something goes wrong.
+
+-- [abi-unsafe-deps.png]
+
+# I'm not sure glibc is safe for this anyway, since there's symbols
+# versioned to GLIBC_PRIVATE, which implies they don't keep internal
+# ABI stability.
+
+--
+
+
+--
+
+Any questions?

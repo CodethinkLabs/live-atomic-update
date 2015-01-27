@@ -1,0 +1,37 @@
+digraph baserock_version_layout {
+    root [label="/"]
+    version_factory [label="factory"]
+    version_factory_run [label="run"]
+    version_factory_orig [label="orig"]
+    root_user_home [label="root"]
+
+    systems -> root [arrowhead=none]
+
+    version_factory -> systems [arrowhead=none]
+    version_factory_run -> version_factory [arrowhead=none]
+    version_factory_orig -> version_factory [arrowhead=none]
+
+    state -> root [arrowhead=none]
+    home -> state [arrowhead=none]
+    var -> state [arrowhead=none]
+    srv -> state [arrowhead=none]
+    root_user_home -> state [arrowhead=none]
+    opt -> state [arrowhead=none]
+
+    version_factory_run_home [label="home"]
+    version_factory_run_home -> version_factory_run [arrowhead=none]
+    version_factory_run_var [label="var"]
+    version_factory_run_var -> version_factory_run [arrowhead=none]
+    version_factory_run_srv [label="srv"]
+    version_factory_run_srv -> version_factory_run [arrowhead=none]
+    version_factory_run_root [label="root"]
+    version_factory_run_root -> version_factory_run [arrowhead=none]
+    version_factory_run_opt [label="opt"]
+    version_factory_run_opt -> version_factory_run [arrowhead=none]
+
+    home -> version_factory_run_home           [label="mount",style=dotted,constraint=false]
+    var -> version_factory_run_var             [label="mount",style=dotted,constraint=false]
+    srv -> version_factory_run_srv             [label="mount",style=dotted,constraint=false]
+    root_user_home -> version_factory_run_root [label="mount",style=dotted,constraint=false]
+    opt -> version_factory_run_opt             [label="mount",style=dotted,constraint=false]
+}

@@ -76,6 +76,134 @@ Why do you want Atomic updates?
 
 --
 
+Proof of concept
+
+# There's two parts to solving this:
+# 1. Make your new version available
+# 2. Make all your processes use the new version
+
+-- [top] [baserock-version-layout.png]
+
+PoC - Making software available
+
+# In Baserock we make a CoW snapshot of an existing version and apply
+# a delta. For example, we have a patch from "factory" to "version1".
+# We create the "version1" rootfs snapshot above by snapshotting
+# "factory/orig", applying the delta, calling that "version1/orig" and
+# snapshotting "version1/run" from that, then synchronising the config.
+
+-- [top] [mounted-baserock-version-layout.png]
+
+PoC - Making software available
+
+# Each version has a fstab for mounting the state volumes, mounting the
+# directories like this:
+# Sorry about the messy graph.
+
+-- [mount-tree.png]
+
+# The result is a filesystem tree somewhat like this. Beneath the node
+# name is the subvolume name.
+# You can see this if you run findmnt. You can do subtree mounts without
+# btrfs if you do a `--bind` mount with the source of a subdirectory of
+# an existing mount.
+
+-- [mount-tree-new-mounted.png]
+
+# There isn't a way to alter a subvolume mount to use a different subvolume,
+# you have to do an entirely new mount, but because the `umount` API is
+# path based, you can't mount the new version over the top and unmount the
+# mount underneath.
+# So instead I duplicate the mount tree with replacement mounts.
+
+-- [mount-tree-pivoted.png]
+
+# I can then do a `pivot_root` to make the new mount tree my root
+
+-- [process-file-pointers.png]
+
+# Unfortunately `pivot_root` won't make all your existing processes use the
+# new versions of those files. It will only change the calling process'
+# root and cwd, and only if they are both "/"
+
+-- [process-file-pointers-corrected.png]
+
+# So my proof of concept uses ptrace to make processes chroot, chdir and
+# re-open directory file descriptors.
+# You need to do this for every process in every mount namespace,
+# and it becomes a headache, since you can't access the real /dev from
+# every namespace.
+# ptracing doesn't work because:
+# 1.  Not all processes are ptraceable
+# 2.  Most processes aren't allowed to chroot
+# 3.  Processes don't like the inode number of their fds changing.
+#     journald uses it to look-up which file descriptor was which when
+#     it restarts itself.
+
+-- [renameat2.png]
+
+renameat2(…, RENAME_EXCHANGE)
+
+# You can solve the need for changing the mount tree for every namespace
+# and chroot by changing the filesystem.
+# You *can* do a whole filesystem update by creating a parallel tree and
+# doing a renameat2(..., RENAME_EXCHANGE) the root directories.
+# However existing processes still have the old root, working directories
+# and directory file descriptors.
+
+-- [process-file-pointers-corrected.png]
+
+New kernel interface for changing another process' file descriptors
+
+# We could add a new kernel interface for altering process' open files
+# so we don't need to ptrace, or require the process to have permissions
+# to chroot, but that still doesn't solve the issue of the stat of directory
+# fds changing.
+
+--
+
+Remaining approach - File system transactions
+
+# One idea would be to add transactions to filesystems. 
+# Btrfs has one form that can deadlock you if you're not careful, and
+# there was a patch to specify a bunch of syscalls to run in a transaction
+# but it didn't go anywhere.
+
+--
+
+Remaining approach - freeze all of userland during update
+
+# You can freeze all processes in a freezer cgroup. You can get away
+# without a fully atomic update if there's no concurrent users to worry
+# about.
+
+# This would give reasonable atomicity guarantees if you tell the
+# bootloader to use a snapshot before you attempt to alter the current
+# version, and you can attempt a roll-back if the application fails
+# without crashing the machine.
+
+--
+
+Remaining approach - Pivot pid 1 and hand over all services
+
+# We could make pid 1 (systemd) `pivot_root` into the new root and start
+# new versions of services, with the old services handing over their
+# state, like an irssi, apache or journald graceful restart.
+
+# I don't consider this to be a useful contender, since it requires the
+# whole linux userland to be able to serialise state and hand over file
+# descriptors to a new process.
+
+--
+
+Remaining approach - Proxy filesystem
+
+# Alternatively we could have a proxy filesystem that we can swap the
+# backing mount for atomically, and have it keep the inodes stable.
+
+# AUFS might be usable for this, as it has some inode mapping, but
+# it doesn't let you remove a layer that has open files, so you can't
+# clean up the old version until every process has re-executed itself.
 
 --
 

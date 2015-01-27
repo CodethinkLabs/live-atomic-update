@@ -1,0 +1,27 @@
+graph baserock_version_layout {
+    root [label="/"]
+    version_factory [label="factory"]
+    version_factory_run [label="run"]
+    version_factory_orig [label="orig"]
+    version_update1 [label="update1"]
+    version_update1_run [label="run"]
+    version_update1_orig [label="orig"]
+    root_user_home [label="root"]
+
+    systems -- root
+
+    version_factory -- systems
+    version_factory_run -- version_factory
+    version_factory_orig -- version_factory
+
+    version_update1 -- systems
+    version_update1_run -- version_update1
+    version_update1_orig -- version_update1
+    
+    state -- root
+    home -- state
+    var -- state
+    srv -- state
+    root_user_home -- state
+    opt -- state
+}

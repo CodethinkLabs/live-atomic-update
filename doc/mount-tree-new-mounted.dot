@@ -1,0 +1,28 @@
+graph baserock_version_layout {
+    "/"  [label="/   \n/systems/factory/run"]
+    home [label="home\n/state/home"]
+    var  [label="var \n/state/var"]
+    srv  [label="srv \n/state/srv"]
+    root [label="root\n/state/root"]
+    opt  [label="opt \n/state/opt"]
+
+    home -- "/"
+    var -- "/"
+    srv -- "/"
+    root -- "/"
+    opt -- "/"
+
+    mnt      [label="mnt \n/systems/version1/run"]
+    mnt_home [label="home\n/state/home"]
+    mnt_var  [label="var \n/state/var"]
+    mnt_srv  [label="srv \n/state/srv"]
+    mnt_root [label="root\n/state/root"]
+    mnt_opt  [label="opt \n/state/opt"]
+
+    mnt -- "/"
+    mnt_home -- mnt
+    mnt_var -- mnt
+    mnt_srv -- mnt
+    mnt_root -- mnt
+    mnt_opt -- mnt
+}

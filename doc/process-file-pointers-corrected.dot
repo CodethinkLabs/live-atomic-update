@@ -1,0 +1,25 @@
+digraph baserock_version_layout {
+    "/"  [label="mnt \n/systems/factory/run"]
+
+    "/" -> mnt [arrowhead=none]
+
+    mnt      [label="/   \n/systems/version1/run"]
+    mnt_home [label="home\n/systems/version1/run"]
+    mnt_root [label="root\n/systems/version1/run"]
+
+    mnt_home -> mnt [arrowhead=none]
+    mnt_root -> mnt [arrowhead=none]
+
+    proc_self [label="/proc/self"]
+    proc_root [label="root"]
+    proc_cwd [label="cwd"]
+    proc_fd [label="fd"]
+    proc_root -> proc_self [arrowhead=none]
+    proc_cwd -> proc_self [arrowhead=none]
+    proc_fd -> proc_self [arrowhead=none]
+    proc_fd3 -> proc_fd [arrowhead=none]
+
+    proc_root -> mnt [style=dotted,constraint=false]
+    proc_cwd ->  mnt_root [style=dotted,constraint=false]
+    proc_fd3 ->  mnt_home [style=dotted,constraint=false]
+}

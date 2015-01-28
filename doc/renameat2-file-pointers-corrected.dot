@@ -1,0 +1,28 @@
+digraph renameat2_fslayout {
+    "/" [label="/"]
+    current [label="current"]
+    version_factory [label="factory"]
+    version_factory_run [label="run",color=cyan]
+    version_factory_orig [label="orig"]
+    version_update1 [label="update1"]
+    version_update1_run [label="run"]
+    version_update1_orig [label="orig"]
+
+    systems -> "/" [arrowhead=none]
+    current -> systems [arrowhead=none]
+
+    version_factory -> systems [arrowhead=none]
+    version_factory_run -> version_factory [arrowhead=none]
+    version_factory_orig -> version_factory [arrowhead=none]
+
+    version_update1 -> systems [arrowhead=none]
+    version_update1_run -> version_update1 [arrowhead=none]
+    version_update1_orig -> version_update1 [arrowhead=none]
+
+    version_factory_run -> current [label="symlink",color=cyan,constraint=false]
+
+    proc_self [label="/proc/self"]
+    proc_root [label="root"]
+    proc_root -> proc_self [arrowhead=none]
+    proc_root -> version_update1_run [style=dotted,constraint=false]
+}

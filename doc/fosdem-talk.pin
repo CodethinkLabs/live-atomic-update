@@ -1,210 +1,331 @@
 #!/usr/bin/env pinpoint
 
-[duration=30]
-
---
+-- [duration=10]
 Online Atomic updates
-# Welcome to my talk about Online, or Live Atomic Updates.  My goal is
-# to hopefully persuade some of you that it's something we should do,
-# and hopefully a bit of collaboration, since I don't have a solution
-# yet.
 
---
+# Welcome to my talk about Online, or Live Atomic Updates.
+#
+# I generally prefer calling them Live, since Online is so
+# overloaded a term that it also implies downloading software
+# updates, while you could also sneakernet an update on.
+#
+# My goal is to hopefully persuade some of you that it's
+# something we should do, crowd-source some ideas, and maybe get
+# a bit of collaboration going, since I don't have a reliable
+# solution yet.
+
+-- [duration=2]
 What do I mean by Online Atomic updates?
+
 # First, what am I talking about?
 
---
+-- [duration=10]
 Online - Updating a running system
-# Online updates means Updating a running system, so there's no
-# service outage.  So if you have to reboot to apply updates you are
-# doing an offline update.
 
---
+# Online updates means Updating a running system, so there's no
+# service outage.
+#
+# So if you have to reboot to apply updates you are doing an
+# offline update.
+
+-- [duration=40]
 Atomic - All or nothing
-# This is a bit more involved. You go from one version to another in
-# one go.
-# Traditional embedded does this with A/B partitioning and a watchdog
-# for if the other partition doesn't boot.
+
+# This is a bit more difficult to explain. You go from one
+# version to another in one go.
+#
+# Traditional embedded projects do this with A/B partitioning and
+# a watchdog for if the other partition is not bootable
+#
 # OSTree/Project atomic does this by rebooting into a different
 # hardlink tree.
-# CoreOS also does some form of atomic update, I haven't looked into
-# it, but I think it still requires a reboot.
+#
+# CoreOS also does some form of atomic update, I haven't looked
+# into how it works, but I think it still requires a reboot.
+#
 # At my day-job I work on a project called Baserock, which has
-# different versions as btrfs subvolumes, and the bootloader picks
-# which to use via the kernel command-line.
+# different versions as btrfs subvolumes, and the bootloader
+# picks which to use via the kernel command-line.
+#
+# As part of an update we change the bootloader configuration so
+# that after the next reboot, we are using the new version of the
+# system.
 
---
+-- [duration=25]
 Why do you want Atomic updates?
 
 •   System image based versioning
 
-# As a result, you can version your system more easily, so you put
-# together a set of known working combinations, and can easily
-# identify what it is.
+# As a result, you can version your system more easily, so you
+# can put together a set of known working combinations, and can
+# easily identify what version someone else is using.
+#
 # Compared with package-based updates where you end up with a
 # combinatorial explosion of what people are running, which makes
 # debugging issues difficult.
 
---
+-- [duration=20]
 Why do you want Atomic updates?
+
 •   Non-atomic updates can leave your system unusable if you are
     interrupted mid-update.
     Per-file atomic update is not sufficient.
 
-# Non-atomic package based updates aren't reliable, since if something
-# goes wrong mid-package update, you can end up in an inconsistent
-# state.
-# There's tricks for ensuring you atomically update a single file,
-# by writing it to disk, fsyncing and renaming it over the top of the
-# old file.
+# Non-atomic package based updates aren't reliable, since if
+# something goes wrong mid-package update, you can end up in an
+# inconsistent state.
+#
+# There's tricks for ensuring you atomically update a single
+# file, by writing it to disk, fsyncing and renaming it over the
+# top of the old file.
 
--- [abi-safe-deps.png]
+-- [abi-safe-deps.png] [duration=30]
 
-# But if you have interdependent files you need to find a
-# safe order for replacing them.
+# But if you have interdependent files you need to find a safe
+# order for replacing them.
+#
 # e.g. updating libc.so before other libraries, and relying on it
 # providing a backwards-compatible ABI
-# This requires packagers to declare a safe order, adding a lot of
-# extra packaging work, and a slip-up in internal ABIs can leave you
-# with a broken system when something goes wrong.
+#
+# This requires packagers to declare a safe order to update files
+# in, adding a lot of extra packaging work, and a slip-up in
+# internal ABIs can leave you with a broken system when something
+# goes wrong.
 
--- [abi-unsafe-deps.png]
+-- [abi-unsafe-deps.png] [duration=15]
 
-# I'm not sure glibc is safe for this anyway, since there's symbols
-# versioned to GLIBC_PRIVATE, which implies they don't keep internal
-# ABI stability.
+# I'm not sure even glibc is safe for this, since there's symbols
+# versioned to GLIBC_PRIVATE, which implies they don't keep
+# internal ABI stability, as if nothing else should be using
+# them, it's "obvious" that you don't need to worry about keeping
+# the ABI compatible.
 
---
+-- [duration=8.425409]
 
 Proof of concept
 
-# There's two parts to solving this:
-# 1. Make your new version available
-# 2. Make all your processes use the new version
+# So as any two files might need to be updated in-lockstep, we
+# need to be able to update everything together.
+#
+# I tried to come up with something to provide an atomic
+# filesystem update.
+#
+# There's two parts to solving an atomic filesystem update:
+#
+# 1.  Making all the data for the new version available
+# 2.  Make all your processes use the new version
 
--- [top] [baserock-version-layout.png]
+-- [baserock-version-layout.png] [top] [duration=30]
 
-PoC - Making software available
+PoC - Making new versions available
 
-# In Baserock we make a CoW snapshot of an existing version and apply
-# a delta. For example, we have a patch from "factory" to "version1".
+# In Baserock we make a Copy-on-Write snapshot of an existing
+# version and apply a delta. For example, we have a patch from
+# "factory" to "version1".
+#
 # We create the "version1" rootfs snapshot above by snapshotting
-# "factory/orig", applying the delta, calling that "version1/orig" and
-# snapshotting "version1/run" from that, then synchronising the config.
+# "factory/orig", applying the delta, calling that
+# "version1/orig" and snapshotting "version1/run" from that, then
+# synchronising the config.
 
--- [top] [mounted-baserock-version-layout.png]
+-- [mounted-baserock-version-layout.png] [top] [duration=15]
 
-PoC - Making software available
+PoC - Making new versions available
 
-# Each version has a fstab for mounting the state volumes, mounting the
-# directories like this:
-# Sorry about the messy graph.
+# Each version has a fstab for mounting the state volumes,
+# mounting the directories like this:
+# 
+# Sorry about the messy graph, I didn't have time to tweak
+# graphviz or lay it all out manually.
 
--- [mount-tree.png]
+-- [mount-tree.png] [duration=25]
 
-# The result is a filesystem tree somewhat like this. Beneath the node
-# name is the subvolume name.
-# You can see this if you run findmnt. You can do subtree mounts without
-# btrfs if you do a `--bind` mount with the source of a subdirectory of
-# an existing mount.
+# The result is a filesystem tree somewhat like this.
+#
+# I have listed the subvolume name beneath the node name.
+#
+# This is a path from the actual root of the filesystem to the
+# "mount root".
+#
+# You don't need to be using btrfs to do this, as you can do this
+# with a bind-mount, it just happens that btrfs lets you do it
+# with one mount, while you need an initial mount then a bind
+# mount to do it with other filesystems.
+#
+# You can see "mount root" by running `findmnt`, or looking at
+# `/proc/self/mountinfo` yourself.
 
--- [mount-tree-new-mounted.png]
+-- [mount-tree-new-mounted.png] [duration=30]
 
-# There isn't a way to alter a subvolume mount to use a different subvolume,
-# you have to do an entirely new mount, but because the `umount` API is
-# path based, you can't mount the new version over the top and unmount the
-# mount underneath.
-# So instead I duplicate the mount tree with replacement mounts.
+# There isn't a way to remount a subvolume mount to use a different
+# subvolume, you have to do an entirely new mount.
+#
+# Because the `umount` API is path based, you can't mount the new
+# version over the top and unmount the mount underneath.
+# 
+# So instead I duplicate the mount tree with replacement mounts,
+# as shown in the graph.
 
--- [mount-tree-pivoted.png]
+-- [mount-tree-pivoted.png] [duration=15]
 
-# I can then do a `pivot_root` to make the new mount tree my root
+# I can then do a `pivot_root` to make the new mount tree my
+# root.
+# 
+# This swaps the root mount point with that of the new tree's
+# root mount mount and puts the old mount point somewhere useful
+# that we can unmount later.
+#
+# You do a similar transition at every boot when you go from the
+# early userland in your initramfs to your rootfs.
 
--- [process-file-pointers.png]
+-- [process-file-pointers.png] [duration=20]
 
-# Unfortunately `pivot_root` won't make all your existing processes use the
-# new versions of those files. It will only change the calling process'
-# root and cwd, and only if they are both "/"
+# Unfortunately `pivot_root` won't make all your existing
+# processes use the new versions of those files.
+#
+# It will only change the calling process' root and cwd, and only
+# if they are both "/".
+#
+# This is sufficient for early userspace as very few processes
+# need to migrate to the rootfs without interruption, the only
+# ones I can think of are storage or file-system daemons, and
+# it's probably preferable for them to stay in the initramfs.
 
--- [process-file-pointers-corrected.png]
+-- [process-file-pointers-corrected.png] [duration=45]
 
-# So my proof of concept uses ptrace to make processes chroot, chdir and
-# re-open directory file descriptors.
+# We however, need every process to move to the new tree, so my
+# proof of concept uses ptrace to make processes chroot, chdir
+# and re-open directory file descriptors.
+#
 # You need to do this for every process in every mount namespace,
-# and it becomes a headache, since you can't access the real /dev from
-# every namespace.
-# ptracing doesn't work because:
+# and it becomes a headache, since you can't access the real /dev
+# from every namespace.
+#
+# Injecting code to make processes move themselves with ptrace
+# isn't an appropriate solution though, since:
+#
 # 1.  Not all processes are ptraceable
 # 2.  Most processes aren't allowed to chroot
 # 3.  Processes don't like the inode number of their fds changing.
-#     journald uses it to look-up which file descriptor was which when
-#     it restarts itself.
+#     journald uses it to look-up which file descriptor was which
+#     when it restarts itself.
 
--- [renameat2.png]
+-- [top]
 
+PoC - Demo
+
+TODO: ADD DEMO HERE
+
+-- [duration=30]
 renameat2(…, RENAME_EXCHANGE)
 
-# You can solve the need for changing the mount tree for every namespace
-# and chroot by changing the filesystem.
-# You *can* do a whole filesystem update by creating a parallel tree and
-# doing a renameat2(..., RENAME_EXCHANGE) the root directories.
-# However existing processes still have the old root, working directories
-# and directory file descriptors.
+# I mentioned earlier that one of the headaches in my Proof of
+# Concept is that it needs to change the mounts for every
+# process, some of which may be in different mount namespaces,
+# which may have Slave or Private mount propagation, so you need
+# to do the mount migration in all those namespaces too.
+# 
+# You can solve the need for changing the mount tree for every
+# namespace and chroot by changing the state of the filesystem
+# instead of the mount tree.
+#
+# You *can* do a whole filesystem update by creating a parallel
+# tree and doing a renameat2(..., RENAME_EXCHANGE) the root
+# directories.
+-- [renameat2-fslayout.png] [duration=5]
 
--- [process-file-pointers-corrected.png]
+# At which point the exchange looks pretty much the same as a
+# pivot, except we had to move the roots around from the outside,
+# since you can't exchange a directory for one of its
+# subdirectories.
+#
+# We put the current version in a reliable place as well as the
+# backed up copy, and since we don't want them to get out of
+# sync, we mark the current version as a symlink.
+
+-- [renameat2-pivot.png] [duration=5]
+
+# When we want to change, we replace the symlink with a snapshot
+# for backup, and swap our snapshots and symlinks around.
+
+-- [renameat2-process-file-pointers] [duration=5]
+
+# However existing processes still have the old root, working
+# directories and directory file descriptors.
+
+-- [process-file-pointers-corrected.png] [duration=20]
 
 New kernel interface for changing another process' file descriptors
 
-# We could add a new kernel interface for altering process' open files
-# so we don't need to ptrace, or require the process to have permissions
-# to chroot, but that still doesn't solve the issue of the stat of directory
-# fds changing.
+# We could add a new kernel interface for altering process' open
+# files so we don't need to ptrace, or require the process to
+# have permissions to chroot, but that still doesn't solve the
+# issue of the stat of directory fds changing.
+#
+# This also needs to be done atomically, since processes that
+# communicate could get confused by having different views of the
+# filesystem.
 
---
+-- [duration=30]
+Remaining approach 1 - File system transactions
 
-Remaining approach - File system transactions
+# Another idea would be to add transactions to filesystems. 
+#
+# Btrfs has one form that can deadlock you if you're not careful,
+# and there was a patch to specify a bunch of syscalls to run in
+# a transaction but it didn't go anywhere.
+#
+# It was suggested that a better approach would be to have some
+# form of syscall that merges two subvolumes, so your transaction
+# is your changes to the snapshot, and they get atomically merged
+# in.
 
-# One idea would be to add transactions to filesystems. 
-# Btrfs has one form that can deadlock you if you're not careful, and
-# there was a patch to specify a bunch of syscalls to run in a transaction
-# but it didn't go anywhere.
+-- [duration=40]
+Remaining approach 2 - freeze all of userland during update
 
---
+# You can get away without a fully atomic update if there's no
+# concurrent users to worry about.
+#
+# You can freeze all processes in a freezer cgroup. You can't
+# freeze the root cgroup, so you need all your services to be
+# managed in cgroups, which makes systemd handy.
+#
+# So atomic operations could be faked by instructing systemd to
+# freeze every service, then run a specified command before
+# unfreezing all the services.
+#
+# This would give reasonable atomicity guarantees by:
+# 1.  If we tell the bootloader to use a snapshot of the old
+#     version before attempting to alter the current version,
+#     so if we crash during update we're still left with a valid
+#     version to boot from.
+# 2.  Attempt to apply the update
+# 3.  If the update failed roll back by using the contents of
+#     the snapshot
+# 4.  If it worked, remove the snapshot and tell the bootloader
+#     to use your version again.
 
-Remaining approach - freeze all of userland during update
+-- [duration=35]
 
-# You can freeze all processes in a freezer cgroup. You can get away
-# without a fully atomic update if there's no concurrent users to worry
-# about.
+Remaining approach 3 - Pivot pid 1 and hand over all services
 
-# This would give reasonable atomicity guarantees if you tell the
-# bootloader to use a snapshot before you attempt to alter the current
-# version, and you can attempt a roll-back if the application fails
-# without crashing the machine.
+# We could make pid 1 (systemd) `pivot_root` into the new root
+# and start new versions of services, with the old services
+# handing over their state, like an irssi, apache or journald
+# graceful restart.
+#
+# I don't consider this to be a useful contender, since it
+# requires the whole linux userland to be able to serialise state
+# and hand over file descriptors to a new process.
 
---
-
-Remaining approach - Pivot pid 1 and hand over all services
-
-# We could make pid 1 (systemd) `pivot_root` into the new root and start
-# new versions of services, with the old services handing over their
-# state, like an irssi, apache or journald graceful restart.
-
-# I don't consider this to be a useful contender, since it requires the
-# whole linux userland to be able to serialise state and hand over file
-# descriptors to a new process.
-
---
-
-Remaining approach - Proxy filesystem
-
+-- [duration=25]
+Remaining approach 4 - Proxy filesystem
 # Alternatively we could have a proxy filesystem that we can swap the
 # backing mount for atomically, and have it keep the inodes stable.
 
-# AUFS might be usable for this, as it has some inode mapping, but
+# AUFS nearly fits the bill, as it has some inode remapping, but
 # it doesn't let you remove a layer that has open files, so you can't
 # clean up the old version until every process has re-executed itself.
 
 --
-
 Any questions?

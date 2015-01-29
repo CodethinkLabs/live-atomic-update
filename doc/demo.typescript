@@ -1,0 +1,377 @@
+Script started on Thu Jan 29 16:55:46 2015
+~ # gcc --version
+gcc (GCC) 4.7.3
+Copyright (C) 2012 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+~ # cat oau~ # cat oau-to-devel-2015[J
+#!/bin/sh
+cd online-atomic-update
+python -m migratelib.migrate_namespace \
+    --replace --filter TARGET=/ \
+    --mount-source /dev/sda --mount-type btrfs -o subvol=/systems/devel-2015/run
+~ # ./oau~ # ./oau-to-devel-2015[J
+Namespace(namespace='/proc/self/ns/mnt', replace={frozenset([('TARGET', '/')]): ('/dev/sda', 'btrfs', ('subvol=/systems/devel-2015/run',))})
+Traceback (most recent call last):
+  File "/usr/lib/python2.7/runpy.py", line 162, in _run_module_as_main
+    "__main__", fname, loader, pkg_name)
+  File "/usr/lib/python2.7/runpy.py", line 72, in _run_code
+    exec code in run_globals
+  File "/root/online-atomic-update/migratelib/migrate_namespace.py", line 92, in <module>
+    run()
+  File "/root/online-atomic-update/migratelib/migrate_namespace.py", line 88, in run
+    umount_cmd=umount_cmd, findmnt_cmd=findmnt_cmd)
+  File "/root/online-atomic-update/migratelib/migrate_namespace.py", line 46, in migrate_namespace
+    "`mount --make-rprivate /` to fix." % root)
+Exception: Cannot migrate namespace, / mount propagation is not private, use `mount --make-rprivate /` to fix.
+~ # mount --make-rprivate /
+~ # ~ # mount --make-rprivate /[J~ # ./oau-to-devel-2015[J
+Namespace(namespace='/proc/self/ns/mnt', replace={frozenset([('TARGET', '/')]): ('/dev/sda', 'btrfs', ('subvol=/systems/devel-2015/run',))})
+INFO:root:mounting /dev/sda to /tmp/tmpFXwFEY/ with options ('subvol=/systems/devel-2015/run',)
+INFO:root:binding /dev to /tmp/tmpFXwFEY/dev
+INFO:root:binding /dev/shm to /tmp/tmpFXwFEY/dev/shm
+INFO:root:binding /dev/pts to /tmp/tmpFXwFEY/dev/pts
+INFO:root:binding /dev/hugepages to /tmp/tmpFXwFEY/dev/hugepages
+INFO:root:binding /dev/mqueue to /tmp/tmpFXwFEY/dev/mqueue
+INFO:root:binding /sys to /tmp/tmpFXwFEY/sys
+INFO:root:binding /sys/fs/cgroup to /tmp/tmpFXwFEY/sys/fs/cgroup
+INFO:root:binding /sys/fs/cgroup/systemd to /tmp/tmpFXwFEY/sys/fs/cgroup/systemd
+INFO:root:binding /sys/fs/cgroup/cpuset to /tmp/tmpFXwFEY/sys/fs/cgroup/cpuset
+INFO:root:binding /sys/fs/cgroup/cpu,cpuacct to /tmp/tmpFXwFEY/sys/fs/cgroup/cpu,cpuacct
+INFO:root:binding /sys/fs/cgroup/freezer to /tmp/tmpFXwFEY/sys/fs/cgroup/freezer
+INFO:root:binding /sys/kernel/debug to /tmp/tmpFXwFEY/sys/kernel/debug
+INFO:root:binding /proc to /tmp/tmpFXwFEY/proc
+INFO:root:binding /proc/sys/fs/binfmt_misc to /tmp/tmpFXwFEY/proc/sys/fs/binfmt_misc
+INFO:root:binding /proc/fs/nfsd to /tmp/tmpFXwFEY/proc/fs/nfsd
+INFO:root:binding /run to /tmp/tmpFXwFEY/run
+INFO:root:binding /tmp to /tmp/tmpFXwFEY/tmp
+INFO:root:binding /src to /tmp/tmpFXwFEY/src
+INFO:root:binding /home to /tmp/tmpFXwFEY/home
+INFO:root:binding /var to /tmp/tmpFXwFEY/var
+INFO:root:binding /root to /tmp/tmpFXwFEY/root
+INFO:root:binding /srv to /tmp/tmpFXwFEY/srv
+INFO:root:binding /opt to /tmp/tmpFXwFEY/opt
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){open("/tmp/tmpFXwFEY/sys/fs/cgroup/systemd", 0200000), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f5134dd4973 in epoll_wait () from /lib64/libc.so.6
+{14, 11}
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){open("/tmp/tmpFXwFEY/sys/fs/cgroup/systemd", 0200000), errno}' returned 14 with errno 11
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){dup2(14, 6), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f5134dd4973 in epoll_wait () from /lib64/libc.so.6
+{6, 11}
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){dup2(14, 6), errno}' returned 6 with errno 11
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){close(14), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f5134dd4973 in epoll_wait () from /lib64/libc.so.6
+{0, 11}
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){close(14), errno}' returned 0 with errno 11
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f5134dd4973 in epoll_wait () from /lib64/libc.so.6
+{0, 11}
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned 0 with errno 11
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f5134dd4973 in epoll_wait () from /lib64/libc.so.6
+{0, 11}
+DEBUG:root:Running --quiet --pid 1 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 11
+migratelib/migrate_process.py:121: UserWarning: Pid 2 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 3 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 5 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 7 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 8 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 9 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 10 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 11 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 13 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 14 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 16 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 17 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 18 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 19 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 20 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 21 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 22 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 23 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 24 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 25 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 27 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 28 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 29 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 30 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 40 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 41 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 42 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 43 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 44 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 45 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 46 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 48 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 49 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 50 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 51 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 52 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 53 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 56 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 57 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 58 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 59 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 60 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 61 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 62 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 63 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 64 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 65 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 66 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 67 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 68 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 69 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 70 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 71 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 72 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 73 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 74 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 75 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 76 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 77 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 97 is not ptraceable
+DEBUG:root:Running --quiet --pid 102 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f711816c953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{-1, 1}
+DEBUG:root:Running --quiet --pid 102 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned -1 with errno 1
+migratelib/migrate_process.py:163: UserWarning: Process 102 has insufficient privileges to chroot
+DEBUG:root:Running --quiet --pid 102 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f711816c953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{0, 4}
+DEBUG:root:Running --quiet --pid 102 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 4
+migratelib/migrate_process.py:121: UserWarning: Pid 115 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 138 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 139 is not ptraceable
+DEBUG:root:Running --quiet --pid 159 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f2c9fd00953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{-1, 1}
+DEBUG:root:Running --quiet --pid 159 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned -1 with errno 1
+migratelib/migrate_process.py:163: UserWarning: Process 159 has insufficient privileges to chroot
+DEBUG:root:Running --quiet --pid 159 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f2c9fd00953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{0, 4}
+DEBUG:root:Running --quiet --pid 159 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 4
+DEBUG:root:Running --quiet --pid 160 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007fef1eea4953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{-1, 1}
+DEBUG:root:Running --quiet --pid 160 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned -1 with errno 1
+migratelib/migrate_process.py:163: UserWarning: Process 160 has insufficient privileges to chroot
+DEBUG:root:Running --quiet --pid 160 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007fef1eea4953 in __epoll_wait_nocancel () from /lib64/libc.so.6
+{0, 4}
+DEBUG:root:Running --quiet --pid 160 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 4
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 164
+DEBUG:root:Running --quiet --pid 164 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f343e2227f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 164 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 164 --batch --eval-command 'output chdir("/.")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f343e2227f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 164 --batch --eval-command 'output chdir("/.")' returned 0
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 169
+DEBUG:root:Running --quiet --pid 169 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f220cab74c3 in __select_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 169 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 169 --batch --eval-command 'output chdir("/.")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f220cab74c3 in __select_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 169 --batch --eval-command 'output chdir("/.")' returned 0
+DEBUG:root:Running --quiet --pid 170 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f934f3b1820 in __poll_nocancel () from /lib64/libc.so.6
+{-1, 1}
+DEBUG:root:Running --quiet --pid 170 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned -1 with errno 1
+migratelib/migrate_process.py:163: UserWarning: Process 170 has insufficient privileges to chroot
+DEBUG:root:Running --quiet --pid 170 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f934f3b1820 in __poll_nocancel () from /lib64/libc.so.6
+{0, 1}
+DEBUG:root:Running --quiet --pid 170 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 1
+migratelib/migrate_process.py:121: UserWarning: Pid 172 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 178 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 179 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 180 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 181 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 182 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 183 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 184 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 185 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 186 is not ptraceable
+DEBUG:root:Running --quiet --pid 189 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f415ecbe4c3 in __select_nocancel () from /lib64/libc.so.6
+{0, 0}
+DEBUG:root:Running --quiet --pid 189 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned 0 with errno 0
+DEBUG:root:Running --quiet --pid 189 --batch --eval-command 'output (int[2]){chdir("/var/lib/nfs"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007f415ecbe4c3 in __select_nocancel () from /lib64/libc.so.6
+{0, 0}
+DEBUG:root:Running --quiet --pid 189 --batch --eval-command 'output (int[2]){chdir("/var/lib/nfs"), errno}' returned 0 with errno 0
+DEBUG:root:Running --quiet --pid 190 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007fd576b4e4c3 in __select_nocancel () from /lib64/libc.so.6
+{0, 0}
+DEBUG:root:Running --quiet --pid 190 --batch --eval-command 'output (int[2]){chroot("/tmp/tmpFXwFEY"), errno}' returned 0 with errno 0
+DEBUG:root:Running --quiet --pid 190 --batch --eval-command 'output (int[2]){chdir("/."), errno}' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib64/libthread_db.so.1".
+0x00007fd576b4e4c3 in __select_nocancel () from /lib64/libc.so.6
+{0, 0}
+DEBUG:root:Running --quiet --pid 190 --batch --eval-command 'output (int[2]){chdir("/."), errno}' returned 0 with errno 0
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 192
+DEBUG:root:Running --quiet --pid 192 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007ff17d51e66e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 192 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 192 --batch --eval-command 'output chdir("/root")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007ff17d51e66e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 192 --batch --eval-command 'output chdir("/root")' returned 0
+migratelib/migrate_process.py:121: UserWarning: Pid 194 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 282 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 284 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 292 is not ptraceable
+migratelib/migrate_process.py:121: UserWarning: Pid 293 is not ptraceable
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 298
+DEBUG:root:Running --quiet --pid 298 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fb5fd2417f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 298 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 298 --batch --eval-command 'output chdir("/root")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fb5fd2417f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 298 --batch --eval-command 'output chdir("/root")' returned 0
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 299
+DEBUG:root:Running --quiet --pid 299 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fb5fd2417f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 299 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 299 --batch --eval-command 'output chdir("/root")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fb5fd2417f0 in __read_nocancel () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 299 --batch --eval-command 'output chdir("/root")' returned 0
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 300
+DEBUG:root:Running --quiet --pid 300 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f21d0b9966e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 300 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 300 --batch --eval-command 'output chdir("/root")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007f21d0b9966e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 300 --batch --eval-command 'output chdir("/root")' returned 0
+migratelib/migrate_process.py:121: UserWarning: Pid 312 is not ptraceable
+migratelib/migrate_process.py:125: UserWarning: Cannot read errno from pid 314
+DEBUG:root:Running --quiet --pid 314 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fa07f10f66e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 314 --batch --eval-command 'output chroot("/tmp/tmpFXwFEY")' returned 0
+DEBUG:root:Running --quiet --pid 314 --batch --eval-command 'output chdir("/root/online-atomic-update")' output 
+warning: Could not load shared library symbols for linux-vdso.so.1.
+Do you need "set solib-search-path" or "set sysroot"?
+0x00007fa07f10f66e in waitpid () from /lib64/libc.so.6
+0
+DEBUG:root:Running --quiet --pid 314 --batch --eval-command 'output chdir("/root/online-atomic-update")' returned 0
+DEBUG:root:Pivoting into /tmp/tmpFXwFEY/tmp
+INFO:root:Pivoting into /tmp/tmpFXwFEY, putting old root into /tmp/tmpFXwFEY/tmp/tmpNSN5YJ
+~ # gcc --version
+gcc (GCC) 4.9.2
+Copyright (C) 2014 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+~ # system-version-manager list
+criu2 (default)
+devel-2015 (running)
+~ # 
+Script done on Thu Jan 29 16:56:50 2015

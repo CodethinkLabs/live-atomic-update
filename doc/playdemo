@@ -1,0 +1,2 @@
+#!/bin/sh
+scriptreplay -t demo.typescript-timings -s demo.typescript

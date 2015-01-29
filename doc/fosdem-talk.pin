@@ -210,11 +210,35 @@ PoC - Making new versions available
 #     journald uses it to look-up which file descriptor was which
 #     when it restarts itself.
 
--- [top]
+-- [top] [command=gnome-terminal -x ./playdemo] [duration=60]
 
 PoC - Demo
 
-TODO: ADD DEMO HERE
+# Here's my demo I prepared earlier.
+#
+# It's actually a recording with the `script` command, since I'm
+# nervous enough about doing a presentation without the prospect
+# of demo failure, and taking extra time fiddling to get the demo
+# ready.
+#
+# I start the demo in a version of a Baserock system with a two
+# year old compiler.
+#
+# The script I've got my command in specifies to replace the
+# mount at `/` with one that has a different btrfs subvolume.
+#
+# It fails the first time, as we need to have mount propagation
+# of `/` to not be shared, for `pivot_root` to work.
+#
+# It's an untidy command as I didn't see much use in polishing a
+# doomed approach.
+#
+# In the output spam you will see warnings that it can't migrate
+# a bunch of processes because they can't be ptraced.
+#
+# But at the end you can see that I've got a more up to date
+# compiler, and Baserock's tool for listing the current version
+# says I'm using the new one.
 
 -- [duration=30]
 renameat2(…, RENAME_EXCHANGE)
@@ -248,7 +272,7 @@ renameat2(…, RENAME_EXCHANGE)
 # When we want to change, we replace the symlink with a snapshot
 # for backup, and swap our snapshots and symlinks around.
 
--- [renameat2-process-file-pointers] [duration=5]
+-- [renameat2-process-file-pointers.png] [duration=5]
 
 # However existing processes still have the old root, working
 # directories and directory file descriptors.

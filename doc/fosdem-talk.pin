@@ -130,8 +130,6 @@ PoC - Making new versions available
 
 -- [mounted-baserock-version-layout.png] [top] [duration=15]
 
-PoC - Making new versions available
-
 # Each version has a fstab for mounting the state volumes,
 # mounting the directories like this:
 # 
@@ -241,6 +239,8 @@ PoC - Demo
 # says I'm using the new one.
 
 -- [duration=30]
+Making it better:
+
 renameat2(…, RENAME_EXCHANGE)
 
 # I mentioned earlier that one of the headaches in my Proof of
@@ -256,21 +256,6 @@ renameat2(…, RENAME_EXCHANGE)
 # You *can* do a whole filesystem update by creating a parallel
 # tree and doing a renameat2(..., RENAME_EXCHANGE) the root
 # directories.
--- [renameat2-fslayout.png] [duration=5]
-
-# At which point the exchange looks pretty much the same as a
-# pivot, except we had to move the roots around from the outside,
-# since you can't exchange a directory for one of its
-# subdirectories.
-#
-# We put the current version in a reliable place as well as the
-# backed up copy, and since we don't want them to get out of
-# sync, we mark the current version as a symlink.
-
--- [renameat2-pivot.png] [duration=5]
-
-# When we want to change, we replace the symlink with a snapshot
-# for backup, and swap our snapshots and symlinks around.
 
 -- [renameat2-process-file-pointers.png] [duration=5]
 
@@ -278,6 +263,7 @@ renameat2(…, RENAME_EXCHANGE)
 # directories and directory file descriptors.
 
 -- [process-file-pointers-corrected.png] [duration=20]
+Getting rid of ptrace:
 
 New kernel interface for changing another process' file descriptors
 

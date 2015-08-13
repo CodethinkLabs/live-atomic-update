@@ -1,7 +1,8 @@
 #!/usr/bin/env pinpoint
+[transition=slide-left]
 
 -- [duration=10]
-Online Atomic updates
+Live Atomic updates
 
 # Welcome to my talk about Online, or Live Atomic Updates.
 #
@@ -9,20 +10,18 @@ Online Atomic updates
 # overloaded a term that it also implies downloading software
 # updates, while you could also sneakernet an update on.
 #
-# My goal is to hopefully persuade some of you that it's
-# something we should do, crowd-source some ideas, and maybe get
-# a bit of collaboration going, since I don't have a reliable
-# solution yet.
+# My goal is to hopefully bounce some useful ideas off people,
+# and get some investment in the idea that we need to do this.
 
 -- [duration=2]
-What do I mean by Online Atomic updates?
+What do I mean by Live Atomic updates?
 
 # First, what am I talking about?
 
 -- [duration=10]
-Online - Updating a running system
+Live/Online - Updating a running system
 
-# Online updates means Updating a running system, so there's no
+# Live updates means Updating a running system, so there's no
 # service outage.
 #
 # So if you have to reboot to apply updates you are doing an
@@ -31,38 +30,37 @@ Online - Updating a running system
 -- [duration=40]
 Atomic - All or nothing
 
-# This is a bit more difficult to explain. You go from one
-# version to another in one go.
+# Atomic is a bit more difficult to explain. You go from one
+# version to another in one go, such that you only ever see the
+# old version or the new version, not the intermediate states
+# in-between.
 #
-# Traditional embedded projects do this with A/B partitioning and
-# a watchdog for if the other partition is not bootable
+# This is generally done by preparing the new version and
+# instructing the bootloader to reboot into the new version,
+# hence these updates are Atomic but not Live.
+#
+# Traditional embedded projects do this with A/B partitioning, so
+# you install the new version to the partition you are not
+# currently using; or live/recovery partitioning where you boot
+# into recovery to apply the update (like android).
 #
 # OSTree/Project atomic does this by rebooting into a different
 # hardlink tree.
 #
-# CoreOS also does some form of atomic update, I haven't looked
-# into how it works, but I think it still requires a reboot.
-#
 # At my day-job I work on a project called Baserock, which has
 # different versions as btrfs subvolumes, and the bootloader
-# picks which to use via the kernel command-line.
-#
-# As part of an update we change the bootloader configuration so
-# that after the next reboot, we are using the new version of the
-# system.
+# picks which to use via the kernel command-line, specifying a
+# different subvolume.
 
 -- [duration=25]
 Why do you want Atomic updates?
 
 •   System image based versioning
 
-# As a result, you can version your system more easily, so you
-# can put together a set of known working combinations, and can
-# easily identify what version someone else is using.
-#
-# Compared with package-based updates where you end up with a
-# combinatorial explosion of what people are running, which makes
-# debugging issues difficult.
+# You want system image based versioning to avoid the
+# combinatorial explosion of all the possible versions that can
+# be running, as if you do a package-based update you have all
+# the different combinations of packages available.
 
 -- [duration=20]
 Why do you want Atomic updates?
@@ -260,7 +258,10 @@ renameat2(…, RENAME_EXCHANGE)
 -- [renameat2-process-file-pointers.png] [duration=5]
 
 # However existing processes still have the old root, working
-# directories and directory file descriptors.
+# directories and directory file descriptors
+#
+# The reason for this is that processes refer to the file that
+# the tree points to, not the pointer in the tree.
 
 -- [process-file-pointers-corrected.png] [duration=20]
 Getting rid of ptrace:
@@ -332,10 +333,20 @@ Remaining approach 3 - Pivot pid 1 and hand over all services
 Remaining approach 4 - Proxy filesystem
 # Alternatively we could have a proxy filesystem that we can swap the
 # backing mount for atomically, and have it keep the inodes stable.
-
+#
 # AUFS nearly fits the bill, as it has some inode remapping, but
 # it doesn't let you remove a layer that has open files, so you can't
 # clean up the old version until every process has re-executed itself.
 
 --
-Any questions?
+Summary
+
+• Atomic Live updates would make updates more reliable
+• Making a new mount tree, or atomically updating the root of a
+  tree also doesn't work, since processes still refer to all the
+  old directories.
+• Possible future approaches are:
+  1.  Filesystem transactions
+  2.  Faking atomic updates by freezing userland
+  3.  Only updating pid 1, and let it restart all the processes
+  4.  A proxy filesystem that can atomically swap its backing fs

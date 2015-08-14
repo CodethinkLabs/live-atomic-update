@@ -127,7 +127,7 @@ def mount_tree(tempdir=None, mount_cmd=mount_cmd, umount_cmd=umount_cmd,
 def create_arg_parser():
     import argparse
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--pid', type=int)
+    ap.add_argument('--pid', type=int, default=None)
     ap.add_argument('--test', action='store_const', const=True, default=False)
     replaceparser.extend_arg_parser(ap)
     return ap

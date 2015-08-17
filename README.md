@@ -1,6 +1,28 @@
 Live atomic updates
 ===================
 
+Summary
+-------
+
+Live updates, Atomic updates, implemented: pick two.
+
+You can perform a live update and keep your uptime by installing packages,
+but if something goes wrong mid-update, your system may not be recoverable.
+
+So atomic updates came along, which solve the mid-update package install
+problem by making a copy of the file system with new software install
+available.
+
+However, they transition to this new version by rebooting, which makes you lose
+your precious uptime even when you don't need a kernel update.
+
+I spoke at [FOSDEM 2015][fosdem-talk] about work I had been doing in this area.
+As a result of that talk I got feedback that leads me to believe the appropriate
+place to make the changes to make Live Atomic Updates is in systemd.
+
+The purpose of the presentation is to explain the problem as I understand it,
+explain my proposed solution, demonstrate it in action, and solicit feedback.
+
 The problem
 -----------
 
@@ -229,6 +251,7 @@ What's missing
 
     None of these are ideal, so more ideas would be better.
 
+[fosdem-talk]: http://video.fosdem.org/2015/devroom-distributions/live_atomic_updates.mp4
 [rename(2)]: http://man7.org/linux/man-pages/man2/rename.2.html
 [SystemUpdates]: http://freedesktop.org/wiki/Software/systemd/SystemUpdates/
 [CoreOS]: https://coreos.com/

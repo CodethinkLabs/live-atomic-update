@@ -146,8 +146,9 @@ def run():
     mount_list = find_mounts(task=opts.pid, fields=search_fields)
 
     with mount_tree() as new_tree:
-        new_tree.mount(generate_mount_commands(mount_list, opts.replace))
-        print new_tree.root
+        new_tree.mount(generate_mount_commands(mount_list, opts.replace,
+                                               new_roo=new_tree.root))
+        print(new_tree.root)
 
 
 if __name__ == '__main__':

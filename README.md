@@ -175,7 +175,7 @@ multiple times.
 So, for a Baserock system to change the version of its rootfs to `$VERSION`, we
 can run this command:
 
-    new_root="$(python -m migratelib.mount_tree -- \
+    new_root="$(python -m migratelib.mount_tree \
         --replace --filter TARGET=/ \
                   --mount-source /dev/sda -o subvol=/systems/"$VERSION"/run)"
 

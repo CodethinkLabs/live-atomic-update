@@ -1,0 +1,83 @@
+Script started on Wed 04 Nov 2015 22:20:13 GMT
+richardmaw@logi:~/src/live-atomic-update/doc/systemd.conf$ ssh -A root@"$ (vm-ip dev)"
+~ # readlink /bin/sh
+busybox
+~ # system-version-manager list
+factory (running) (default)
+modified
+~ # cd /src/live~ # cd /src/live-atomic-update/[J
+/src/live-atomic-update # new_root="$(python -m migratelib.mount_tree --r
+eplace --filter TARGET=/ --mount-source /dev/vda -o subvol=/systems/modif
+ied/run)"
+/src/live-atomic-update # systemctl upgrade-root "$new_root"
+/src/live-atomic-update # systemctl restart openssh.[Jd.service
+Connection to 192.168.122.117 closed by remote host.
+Connection to 192.168.122.117 closed.
+richardmaw@logi:~/src/live-atomic-update/doc/systemd.conf$ ssh -A root@"$((vm-ip dev)"
+]0;root@brdev:~-sh-4.3# system-version-manager list
+factory (default)
+modified (running)
+]0;root@brdev:~-sh-4.3# readlink /bin/sh
+bash
+]0;root@brdev:~-sh-4.3# lsof /mnt
+COMMAND   PID             USER   FD   TYPE DEVICE SIZE/OFF  NODE NAME
+systemd-j 145             root  txt    REG   0,20  1448224 57899 /mnt/lib/systemd/systemd-journald
+systemd-j 145             root   14u   REG   0,20  8388608 58379 /mnt/var/log/journal/c5aa0b307f905d37e296d0858618906d/system.journal
+systemd-u 152             root  cwd    DIR   0,20      154   256 /
+systemd-u 152             root  rtd    DIR   0,20      154   256 /
+systemd-u 152             root  txt    REG   0,20  1689000 57896 /lib/systemd/systemd-udevd
+systemd-u 152             root    6r   REG   0,20  6797658 58380 /etc/udev/hwdb.bin
+systemd-t 259 systemd-timesync  cwd    DIR   0,20      154   256 /
+systemd-t 259 systemd-timesync  rtd    DIR   0,20      154   256 /
+systemd-t 259 systemd-timesync  txt    REG   0,20   656320 57911 /lib/systemd/systemd-timesyncd
+dbus-daem 263       messagebus  txt    REG   0,20   198176  2442 /mnt/usr/bin/dbus-daemon
+systemd-n 264  systemd-network  cwd    DIR   0,20      154   256 /
+systemd-n 264  systemd-network  rtd    DIR   0,20      154   256 /
+systemd-n 264  systemd-network  txt    REG   0,20  3288248 57919 /lib/systemd/systemd-networkd
+systemd-l 265             root  txt    REG   0,20  2891320 57921 /mnt/lib/systemd/systemd-logind
+agetty    268             root  txt    REG   0,20    40216 57007 /mnt/sbin/agetty
+systemd-r 278  systemd-resolve  cwd    DIR   0,20      154   256 /
+systemd-r 278  systemd-resolve  rtd    DIR   0,20      154   256 /
+systemd-r 278  systemd-resolve  txt    REG   0,20  2396912 57917 /lib/systemd/systemd-resolved
+]0;root@brdev:~-sh-4.3# systemctl restart systemd-resolved.service systemd-journald.s<rt systemd-resolved.service systemd-journald.se                      rvice systemd-udevd.se<vice systemd-journald.service systemd-udevd.ser                      vice systemd-timesyncd<ervice systemd-udevd.service systemd-timesyncd.                      service systemd-logind<rvice systemd-timesyncd.service systemd-logind.                      service systemd-networ<.service systemd-logind.service systemd-network                      d.service getty@tty1.s<.service systemd-networkd.service getty@tty1.se                      rvice dbus.service
+]0;root@brdev:~-sh-4.3# /src/live-atomic-update/recursive-umount.sh -d /mnt
+]0;root@brdev:~-sh-4.3# findmnt
+TARGET                       SOURCE               FSTYPE  OPTIONS
+/                            /dev/vda[/systems/modified/run]
+|                                                 btrfs   rw,relatime,spa
+|-/sys                       sysfs                sysfs   rw,nosuid,nodev
+| |-/sys/fs/cgroup           tmpfs                tmpfs   ro,nosuid,nodev
+| | |-/sys/fs/cgroup/systemd cgroup               cgroup  rw,nosuid,nodev
+| | |-/sys/fs/cgroup/cpuset  cgroup               cgroup  rw,nosuid,nodev
+| | |-/sys/fs/cgroup/net_cls cgroup               cgroup  rw,nosuid,nodev
+| | |-/sys/fs/cgroup/freezer cgroup               cgroup  rw,nosuid,nodev
+| | `-/sys/fs/cgroup/cpu,cpuacct
+| |                          cgroup               cgroup  rw,nosuid,nodev
+| |-/sys/kernel/config       configfs             configf rw,relatime
+| |-/sys/kernel/debug        debugfs              debugfs rw,relatime
+| `-/sys/fs/fuse/connections fusectl              fusectl rw,relatime
+|-/proc                      proc                 proc    rw,nosuid,nodev
+|-/dev                       devtmpfs             devtmpf rw,nosuid,size=
+| |-/dev/shm                 tmpfs                tmpfs   rw,nosuid,nodev
+| |-/dev/pts                 devpts               devpts  rw,nosuid,noexe
+| |-/dev/mqueue              mqueue               mqueue  rw,relatime
+| `-/dev/hugepages           hugetlbfs            hugetlb rw,relatime
+|-/run                       tmpfs                tmpfs   rw,nosuid,nodev
+|-/tmp                       tmpfs                tmpfs   rw,relatime
+|-/var                       /dev/vda[/state/var] btrfs   rw,noatime,spac
+|-/home                      /dev/vda[/state/home]
+|                                                 btrfs   rw,noatime,spac
+|-/opt                       /dev/vda[/state/opt] btrfs   rw,noatime,spac
+|-/root                      /dev/vda[/state/root]
+|                                                 btrfs   rw,noatime,spac
+|-/srv                       /dev/vda[/state/srv] btrfs   rw,noatime,spac
+`-/src                       /dev/vdb             ext4    rw,noatime,data
+]0;root@brdev:~-sh-4.3# system-version-manager set-default modified
+]0;root@brdev:~-sh-4.3# system-version-manager list
+factory
+modified (running) (default)
+]0;root@brdev:~-sh-4.3# logout
+Connection to 192.168.122.117 closed.
+richardmaw@logi:~/src/live-atomic-update/doc/systemd.conf$ exit
+
+Script done on Wed 04 Nov 2015 22:22:00 GMT

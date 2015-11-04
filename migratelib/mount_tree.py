@@ -147,7 +147,7 @@ def run():
 
     with mount_tree() as new_tree:
         new_tree.mount(generate_mount_commands(mount_list, opts.replace,
-                                               new_roo=new_tree.root))
+                                               new_root=new_tree.root))
         print(new_tree.root)
 
 

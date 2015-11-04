@@ -1,0 +1,130 @@
+#!/usr/bin/env pinpoint
+[transition=slide-left]
+
+-- [duration=10]
+Live Atomic updates with systemd
+
+# Hello. My name is Richard Maw, I work for Codethink.
+# Welcome to my talk about Live Atomic Updates.
+#
+# The thinking behind this talk came about
+# because of a request by a client,
+# they decided against implementation,
+# but I still think it's a thing we should do.
+
+-- [duration=10]
+What are atomic updates?
+
+# Hands up anyone who has not heard of Project Atomic or CoreOS
+#
+# Keep it up if you know how the system update mechanism works?
+
+-- [duration=40]
+Atomic - All or nothing
+
+# I'll keep it brief for the recording then.
+#
+# You prepare the new version in its entireity,
+# then you switch to it in a way that fails and leaves the old version,
+# or succeeds and you're using the new version,
+# not a mix part-way between both.
+#
+# Project Atomic fetches a new ostree ref, checks it out,
+# then changes the bootloader config then reboots.
+# AIUI CoreOS copies the partition, applies a delta
+# then changes the bootloader config and reboots.
+# We developed our own at Codethink called Baserock,
+# which applied a delta to a btrfs snapshot,
+# then changes the bootloader config and reboots.
+
+--
+Live - without needing to bring the system down
+
+# You may have noticed a common theme there.
+#
+# The atomic switch operation is a reboot,
+# which means you need to load-balance multiple systems.
+# Making it unsuitable for small-scale infra and embedded.
+
+-- [duration=8.425409]
+
+Proof of concept
+
+# This is a slightly contrived demo
+# showing upgrading to a system where /bin/sh is bash.
+# 1.  A script to duplicate a mount tree with changes,
+#     so I can make a tree with a new root mount.
+# 2.  A patched systemd which can perform a switch-root without killing.
+# 3.  Issuing a restart to services using the old root.
+
+-- [top] [command=gnome-terminal -x ./run-demo.sh] [duration=60]
+
+PoC - Demo
+
+# ssh -A root@"$(vm-ip dev)" # login
+# readlink /bin/sh # to show busybox as sh
+# system-version-manager list
+# cd /src/live-atomic-update
+# new_root="$(python -m migratelib.mount_tree --replace --filter TARGET=/ --mount-source /dev/vda -o subvol=/systems/modified/run)"
+# systemctl upgrade-root "$new_root" # to do the switch
+# systemctl restart opensshd.service
+# ssh -A root@"$(vm-ip dev)" # login
+# system-version-manager list # shows different version running
+# readlink /bin/sh # show is bash
+# # tidying up now
+# lsof /mnt
+# systemctl restart systemd-resolved.service systemd-journald.service systemd-udevd.service systemd-timesyncd.service systemd-logind.service systemd-networkd.service getty@tty1.service dbus.service
+# /src/live-atomic-update/recursive-umount.sh -d /mnt # umount fails because used elsewhere
+# system-version-manager set-default modified
+# system-version-manager list
+
+-- [duration=40]
+Issue 1 - Creating the new mount tree this way is racy
+
+# You could lose a mount or include one you shouldn't,
+# if the mounts change between making the new tree
+# and pivoting PID1 to use the new tree.
+#
+# recursive binds would allow new mounts
+# on top of kept mounts to remain,
+# but it doesn't help if something needs to be mounted
+# on top of a mount that must be replaced.
+
+-- [duration=40]
+Issue 2 - switch-root exec can fail fatally
+
+# If there's file or page table corruption at the wrong time,
+# then your process dies with an apparent SIGKILL.
+# So yes, you *can* kill PID 1.
+#
+# CoW filesystems with integrity checking should mitigate this.
+
+-- [duration=40]
+Issue 3 - Services need to be able to preserve state across restarts
+
+# Stateless, socket activated services work automatically,
+# otherwise you need to hand file descriptors to systemd (like journald).
+#
+# This is not a new problem,
+# though I'm not sure how it would work for graphical applications.
+
+--
+Issue 4 - Groups of services with internal APIs need to be restarted together
+
+# Potentially you don't need to restart every service at once,
+# you can let them leisurely restart themselves,
+# especially if they exit on idle.
+#
+# But if groups of services have internal APIs,
+# they need to be restarted together,
+# since generally internal APIs are subject to breakage.
+#
+# Hopefully the unit dependency information in systemd is sufficient.
+#
+# A nice thing about the CoreOS/Project Atomic approach,
+# is that you don't need to restart applications in containers,
+# since they dont' see the host's rootfs,
+# and there's mercifully few services running on the host.
+
+--
+Any questions?

@@ -1,0 +1,15 @@
+ssh -A root@"$(vm-ip dev)" # login
+readlink /bin/sh # to show busybox as sh
+system-version-manager list
+cd /src/live-atomic-update
+new_root="$(python -m migratelib.mount_tree --replace --filter TARGET=/ --mount-source /dev/vda -o subvol=/systems/modified/run)"
+systemctl upgrade-root "$new_root" # to do the switch
+systemctl restart opensshd.service
+ssh -A root@"$(vm-ip dev)" # login
+system-version-manager list # shows different version running
+readlink /bin/sh # show is bash
+# tidying up now
+lsof /mnt
+systemctl restart systemd-resolved.service systemd-journald.service systemd-udevd.service systemd-timesyncd.service systemd-logind.service systemd-networkd.service getty@tty1.service dbus.service
+/src/live-atomic-update/recursive-umount.sh -d /mnt # umount fails because used elsewhere
+system-version-manager set-default modified

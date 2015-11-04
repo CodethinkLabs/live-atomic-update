@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2014 Codethink Limited
+# Copyright (C) 2014-2015 Codethink Limited
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,16 @@
 # Recursive unmount, useful for testing as there's a lot of mounts to undo
 set -eu
 
+detach=false
+if [ "$1" = -d ]; then
+    detach=true
+    shift
+fi
+
 findmnt -RrnoTARGET "$1" | tac | while read -r line; do
-    umount "$(printf "$line")"
+    if "$detach"; then
+        umount -l "$(printf "$line")"
+    else
+        umount "$(printf "$line")"
+    fi
 done
